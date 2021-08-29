@@ -1,0 +1,4 @@
+module NQueens {
+	requires guava;
+	
+}
