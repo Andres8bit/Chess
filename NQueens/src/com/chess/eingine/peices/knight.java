@@ -12,7 +12,7 @@ import com.google.common.collect.ImmutableList;
 
 public class knight extends Piece{
 	private final static int[] POSSIBLE_MOVES = {-17,-15,-10,-6,6,10,15,17};
-	knight(int pos, Alliance owner) {
+	knight(final int pos,final Alliance owner) {
 		super(pos, owner);
 	}
 
@@ -27,7 +27,7 @@ public class knight extends Piece{
 				if(firstColumn(this.position,cur) 
 				   || secondColumn(this.position,cur)
 				   || seventhColumn(this.position,cur)
-				   || eightColumn(this.position,cur))
+				   || eighthColumn(this.position,cur))
 					continue;
 				
 				final Tile curTile = board.getTile(canidate);
@@ -58,8 +58,8 @@ public class knight extends Piece{
 		return BoardUtils.SEVENTH_COLUMN [coord] && (offset == -6 || offset == 10);
 	}
 	
-	private static boolean eightColumn(final int coord, final int offset) {
-		return BoardUtils.EIGHT_COLUMN[coord] && (offset == -15 || offset == -6 
+	private static boolean eighthColumn(final int coord, final int offset) {
+		return BoardUtils.EIGHTH_COLUMN[coord] && (offset == -15 || offset == -6 
 				|| offset == 10 || offset == 17);
 	}
 }
