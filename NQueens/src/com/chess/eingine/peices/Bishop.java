@@ -14,14 +14,20 @@ import com.google.common.collect.ImmutableList;
 
 public class Bishop extends Piece{
 	private final static int[] POSSIBLE_MOVES = {-9,-7,7,9};
-	Bishop(final int pos,final Alliance owner) {
+
+	public Bishop(final int pos,final Alliance owner) {
 		super(pos, owner);
 		// TODO Auto-generated constructor stub
 	}
 
 	@Override
-	public Collection<Move> LegalMoves(final Board board) {
-	final List<Move> legal_moves = new ArrayList();
+	public String toString() {
+		return Piece.PieceType.BISHOP.toString();
+	}
+	
+	@Override
+	public Collection<Move> legalMoves(final Board board) {
+	final List<Move> legal_moves = new ArrayList<>();
 	for(final int offset: POSSIBLE_MOVES) {
 		int canidate = this.position;
 		while(BoardUtils.isValidTile(canidate)) {

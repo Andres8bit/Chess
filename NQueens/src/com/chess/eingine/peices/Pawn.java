@@ -12,13 +12,20 @@ import com.google.common.collect.ImmutableList;
 
 public class Pawn extends Piece{
 	private final static int[] POSSIBLE_MOVES = {8,16,7,9};
-	Pawn(final int pos, final Alliance owner) {
+	
+	public Pawn(final int pos, final Alliance owner) {
 		super(pos, owner);
 		// TODO Auto-generated constructor stub
 	}
+	
+	@Override
+	public String toString() {
+		return Piece.PieceType.PAWN.toString();
+	}
+	
 
 	@Override
-	public Collection<Move> LegalMoves(final Board board) {
+	public Collection<Move> legalMoves(final Board board) {
 		final List<Move> legal_moves = new ArrayList<>();
 		
 		for(final int offset:POSSIBLE_MOVES) {

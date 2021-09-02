@@ -15,6 +15,10 @@ public abstract class Piece {
 		this.firstMove = true;
 	}
 	
+	public int pos() {
+		return this.position;
+	}
+	
 	public Alliance piece_alliance() {
 		return owner;
 	}
@@ -23,6 +27,24 @@ public abstract class Piece {
 		return firstMove;
 	} 
 	
-	public abstract Collection<Move> LegalMoves(final Board board);
+	public abstract Collection<Move> legalMoves(final Board board);
 
+	public enum PieceType{
+		PAWN("P"),
+		KNIGHT("N"),
+		BISHOP("B"),
+		ROOK("R"),
+		QUEEN("Q"),
+		KING("K");
+		
+		private String pieceName;
+		PieceType(String name){
+			this.pieceName = name;
+		}
+		
+		@Override
+		public String toString() {
+			return this.pieceName;
+		}
+	}
 }
