@@ -14,7 +14,7 @@ public class King extends Piece{
 	private final static int[] POSSIBLE_MOVES = {-9,-8,-7,-1,1,7,8,9};
 	
 	public King(final int pos, final Alliance owner) {
-		super(pos, owner);
+		super(pos, owner,PieceType.KING);
 		// TODO Auto-generated constructor stub
 	}
 

@@ -16,8 +16,7 @@ public  class Queen extends Piece {
 	private final static int[] POSSIBLE_MOVES = {-9,-8,-7,-1,1,7,8,9};
 
 	public Queen(final int pos, final Alliance owner) {
-		super(pos, owner);
-		// TODO Auto-generated constructor stub
+		super(pos, owner,PieceType.QUEEN);
 	}
 
 	@Override
@@ -27,7 +26,7 @@ public  class Queen extends Piece {
 	
 	@Override
 	public Collection<Move> legalMoves(final Board board) {
-	final List<Move> legal_moves = new ArrayList();
+	final List<Move> legal_moves = new ArrayList<>();
 	for(final int offset: POSSIBLE_MOVES) {
 		int canidate = this.position;
 		while(BoardUtils.isValidTile(canidate)) {

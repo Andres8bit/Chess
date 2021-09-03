@@ -14,8 +14,7 @@ public class Pawn extends Piece{
 	private final static int[] POSSIBLE_MOVES = {8,16,7,9};
 	
 	public Pawn(final int pos, final Alliance owner) {
-		super(pos, owner);
-		// TODO Auto-generated constructor stub
+		super(pos, owner,PieceType.PAWN);
 	}
 	
 	@Override

@@ -16,7 +16,7 @@ public class Rook extends Piece{
 	private final static int[] POSSIBLE_MOVES = {-8,-1,1,8};
 	
 	public Rook(final int pos,final  Alliance owner) {
-		super(pos, owner);
+		super(pos, owner,PieceType.ROOK);
 		// TODO Auto-generated constructor stub
 	}
 
@@ -27,7 +27,7 @@ public class Rook extends Piece{
 	
 	@Override
 	public Collection<Move> legalMoves(Board board) {
-		final List<Move> legal_moves = new ArrayList();
+		final List<Move> legal_moves = new ArrayList<>();
 		for(final int offset: POSSIBLE_MOVES) {
 			int canidate = this.position;
 			while(BoardUtils.isValidTile(canidate)) {

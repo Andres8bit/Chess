@@ -8,11 +8,13 @@ public abstract class Piece {
 	protected final int position;
 	protected final Alliance owner;
 	protected final boolean firstMove;
+	protected final PieceType type;
 	
-	Piece(final int pos, final Alliance owner){
+	Piece(final int pos, final Alliance owner,final PieceType type){
 		this.position = pos;
 		this.owner = owner;
 		this.firstMove = true;
+		this.type = type;
 	}
 	
 	public int pos() {
@@ -27,6 +29,10 @@ public abstract class Piece {
 		return firstMove;
 	} 
 	
+	public PieceType getType() {
+		return this.type;
+	}
+	
 	public abstract Collection<Move> legalMoves(final Board board);
 
 	public enum PieceType{
@@ -38,7 +44,7 @@ public abstract class Piece {
 		KING("K");
 		
 		private String pieceName;
-		PieceType(String name){
+		PieceType(final String name){
 			this.pieceName = name;
 		}
 		

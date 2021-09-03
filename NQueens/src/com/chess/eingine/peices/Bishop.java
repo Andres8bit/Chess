@@ -16,7 +16,7 @@ public class Bishop extends Piece{
 	private final static int[] POSSIBLE_MOVES = {-9,-7,7,9};
 
 	public Bishop(final int pos,final Alliance owner) {
-		super(pos, owner);
+		super(pos, owner,PieceType.BISHOP);
 		// TODO Auto-generated constructor stub
 	}
 
