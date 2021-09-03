@@ -10,6 +10,7 @@ public class BoardUtils {
     public static final boolean[] SEVENTH_ROW = initRow(6);
 	public static final int NUM_TILES = 64;
 	public static final int TILES_PER_ROW = 8;
+	
 	private BoardUtils() {
 		throw new RuntimeException("Cannot Instantiate");
 	}
@@ -18,6 +19,7 @@ public class BoardUtils {
 		return coord >= 0 && coord < 64;
 	}
 	
+
 	public static boolean[] initColumn(int col) {
 		final boolean[] column = new boolean[64];
 		do {

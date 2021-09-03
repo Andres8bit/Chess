@@ -13,12 +13,21 @@ public abstract class Move {
 	this.dest = destination;
  }
  
+ public int getDest() {
+		return dest;
+  }
  public static final class MajorMove extends Move
  
  {
 
 	public MajorMove(final Board board,final  Piece to_move,final int destination) {
 		super(board, to_move, destination);
+	}
+
+	@Override
+	public Board execute() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 
@@ -32,6 +41,16 @@ public abstract class Move {
 			this.attackPiece = attack;
 		
 		}
+
+	@Override
+	public Board execute() {
+		// TODO Auto-generated method stub
+		return null;
 	}
+	}
+
+	public abstract Board execute();
+
+
  
 }
