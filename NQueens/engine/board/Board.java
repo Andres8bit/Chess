@@ -37,7 +37,7 @@ public final class Board {
 		
 		this.wPlayer = new WPlayer(this,wLegalMoves, bLegalMoves);
 		this.bPlayer = new BPlayer(this, wLegalMoves,bLegalMoves);
-		this.curPlayer = null;
+		this.curPlayer = builder.nextMove.choosePlayer(this.wPlayer,this.bPlayer);
 	}
 	
 	@Override
