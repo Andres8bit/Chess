@@ -61,4 +61,9 @@ public  class Queen extends Piece {
 	private static boolean eighthColumn(final int coord, final int offset) {
 		return BoardUtils.EIGHTH_COLUMN[coord] && (offset == -7 || offset == 9 || offset == 1);
 	}
+
+	@Override
+	public Queen movePiece(Move move) {
+		return new Queen(move.getDest(),move.getPiece().piece_alliance());
+	}
 }

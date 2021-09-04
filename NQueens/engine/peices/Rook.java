@@ -63,5 +63,9 @@ public class Rook extends Piece{
 		return BoardUtils.EIGHTH_COLUMN[coord] && offset == 1;
 	}
 
+	@Override
+	public Rook movePiece(Move move) {
+		return new Rook(move.getDest(),move.getPiece().piece_alliance());
+	}
 
 }

@@ -70,4 +70,8 @@ public class Pawn extends Piece{
 		return ImmutableList.copyOf(legal_moves);
 	}
 
+	@Override
+	public Pawn movePiece(Move move) {
+		return new Pawn(move.getDest(),move.getPiece().piece_alliance());
+	}
 }

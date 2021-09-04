@@ -63,4 +63,9 @@ public class Bishop extends Piece{
 		return BoardUtils.EIGHTH_COLUMN[coord] && (offset == -7 || offset == 9);
 	}
 
+	@Override
+	public Bishop movePiece(Move move) {
+		return new Bishop(move.getDest(),move.getPiece().piece_alliance());
+	}
+
 }

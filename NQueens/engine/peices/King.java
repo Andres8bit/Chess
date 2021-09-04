@@ -15,7 +15,6 @@ public class King extends Piece{
 	
 	public King(final int pos, final Alliance owner) {
 		super(pos, owner,PieceType.KING);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -52,5 +51,11 @@ public class King extends Piece{
 	
 	private static boolean eighthColumn(final int coord, final int offset) {
 		return BoardUtils.EIGHTH_COLUMN[coord] && (offset == -7 || offset == 9 || offset == 1);
+	}
+
+
+	@Override
+	public King movePiece(Move move) {
+		return new King(move.getDest(),move.getPiece().piece_alliance());
 	}
 }
