@@ -18,6 +18,7 @@ import com.chess.engine.player.BPlayer;
 import com.chess.engine.player.Player;
 import com.chess.engine.player.WPlayer;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public final class Board {
 	private final List<Tile> board;
@@ -181,5 +182,9 @@ public final class Board {
 			return new Board(this);
 		}
 		
+	}
+
+	public Iterable<Move> getAllLegalMoves() {
+		return  Iterables.unmodifiableIterable(Iterables.concat(this.wPlayer.getLegalMoves(),this.bPlayer.getLegalMoves()));
 	}
 }
