@@ -11,6 +11,7 @@ import com.chess.engine.peices.King;
 import com.chess.engine.peices.Piece;
 import com.chess.engine.peices.Piece.PieceType;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 public abstract class Player {
 	protected final Board board;
@@ -22,11 +23,11 @@ public abstract class Player {
 			final Collection<Move> opponentMoves){
 		this.board = board;
 		this.playerKing = establishKing();
-		this.legalMoves = getLegalMoves();
+		this.legalMoves = ImmutableList.copyOf(Iterables.concat(legalMoves,calculateKingCastle(legalMoves,opponentMoves)));
 		this.checked = !Player.AttacksOnTile(this.playerKing.pos(),opponentMoves).isEmpty();
 	}
 
-	private static Collection<Move> AttacksOnTile(int pos, Collection<Move> moves) {
+	public static Collection<Move> AttacksOnTile(int pos, Collection<Move> moves) {
 		final List<Move> attacks = new ArrayList<>();
 		for(final Move move: moves) {
 			if(pos == move.getDest()) {
@@ -103,4 +104,6 @@ public abstract class Player {
 	public abstract Collection<Piece> getActivePieces();
 	public abstract Alliance getAlliance();
 	public abstract Player opponent();
+	public abstract Collection<Move> calculateKingCastle(final Collection<Move> legalMoves,final Collection<Move> opponentLegalMoves);
+	
 }
