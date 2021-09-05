@@ -77,4 +77,8 @@ public abstract class Tile {
 			return this.piece;
 		}
 	}
+
+	public int getCoord() {
+		return this.coord;
+	}
 }
