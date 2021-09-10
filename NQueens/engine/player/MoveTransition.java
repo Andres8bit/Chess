@@ -4,17 +4,40 @@ import com.chess.engine.board.Board;
 import com.chess.engine.board.Move;
 
 public class MoveTransition {
-	private final Board transitionBoard;
-	private final Move move;
-	private final MoveStatus moveStatus;
+	 private final Board fromBoard;
+	    private final Board toBoard;
+	    private final Move transitionMove;
+	    private final MoveStatus moveStatus;
+
+	    public MoveTransition(final Board fromBoard,
+	                          final Board toBoard,
+	                          final Move transitionMove,
+	                          final MoveStatus moveStatus) {
+	        this.fromBoard = fromBoard;
+	        this.toBoard = toBoard;
+	        this.transitionMove = transitionMove;
+	        this.moveStatus = moveStatus;
+	    }
+
+	    public Board getFromBoard() {
+	        return this.fromBoard;
+	    }
+
+	    public Board getToBoard() {
+	         return this.toBoard;
+	    }
+
+	    public Move getTransitionMove() {
+	        return this.transitionMove;
+	    }
+
+	    public MoveStatus getMoveStatus() {
+	        return this.moveStatus;
+	    }
 	
-	public MoveTransition(final Board transition,final Move move,final MoveStatus moveStatus) {
-		this.transitionBoard = transition;
-		this.move = move;
-		this.moveStatus = moveStatus;
+	@Override
+	public String toString() {
+		return this.transitionMove.toString();
 	}
-	
-	public MoveStatus getMoveStatus() {
-		return moveStatus;
-	}
+
 }

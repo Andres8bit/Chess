@@ -16,7 +16,7 @@ import com.chess.engine.peices.Rook;
 import com.google.common.collect.ImmutableList;
 
 public class BPlayer extends Player {
-	public BPlayer(Board board, Collection<Move> wLegalMoves, Collection<Move> bLegalMoves) {
+	public BPlayer(final Board board, final Collection<Move> wLegalMoves, final Collection<Move> bLegalMoves) {
 		super(board,bLegalMoves,wLegalMoves);
 	}
 
@@ -55,7 +55,10 @@ public class BPlayer extends Player {
 			   && !this.board.getTile(2).isOccupied()
 			   && !this.board.getTile(3).isOccupied()) {
 				final Tile rookTile = this.board.getTile(0);
-				if(rookTile.isOccupied() && rookTile.getPiece().isFirstMove()) {
+				if(rookTile.isOccupied() && rookTile.getPiece().isFirstMove()
+						&& Player.AttacksOnTile(2,opponentLegalMoves).isEmpty()
+						&& Player.AttacksOnTile(3,opponentLegalMoves).isEmpty()
+						&& rookTile.getPiece().getType() == PieceType.ROOK) {
 					kingCastles.add(new QueenSideCastleMove(this.board,this.playerKing,2,(Rook)rookTile.getPiece(),rookTile.getCoord(),3));
 				}
 			}
