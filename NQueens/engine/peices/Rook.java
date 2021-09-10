@@ -7,7 +7,6 @@ import java.util.List;
 import com.chess.engine.board.Board;
 import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
-import com.chess.engine.board.Tile;
 import com.chess.engine.board.Move.AttackMove;
 import com.chess.engine.board.Move.MajorMove;
 import com.google.common.collect.ImmutableList;
@@ -15,10 +14,14 @@ import com.google.common.collect.ImmutableList;
 public class Rook extends Piece{
 	private final static int[] POSSIBLE_MOVES = {-8,-1,1,8};
 	
-	public Rook(final int pos,final  Alliance owner) {
-		super(pos, owner,PieceType.ROOK);
-		// TODO Auto-generated constructor stub
+	public Rook(final int pos, final Alliance owner, final Boolean first) {
+		super(pos,owner,PieceType.ROOK,first);
 	}
+	
+	public Rook(final int pos,final  Alliance owner) {
+		super(pos, owner,PieceType.ROOK,true);
+	}
+	
 
 	@Override
 	public String toString() {
@@ -26,24 +29,24 @@ public class Rook extends Piece{
 	}
 	
 	@Override
-	public Collection<Move> legalMoves(Board board) {
+	public Collection<Move> legalMoves(final Board board) {
 		final List<Move> legal_moves = new ArrayList<>();
 		for(final int offset: POSSIBLE_MOVES) {
 			int canidate = this.position;
 			while(BoardUtils.isValidTile(canidate)) {
-				if(firstColumn(canidate,offset) ||
-					eighthColumn(canidate,offset))
+				if(firstColumn(canidate,offset) || eighthColumn(canidate,offset)) {
 					break;
+				}
+				
 				canidate += offset;
 				if(BoardUtils.isValidTile(canidate)) {
-					final Tile dest = board.getTile(canidate);
-					if(!dest.isOccupied()) {
+					final Piece piece = board.getPiece(canidate);
+					if(piece == null) {
 						legal_moves.add(new MajorMove(board, this, canidate));
 					}else {
-						final Piece occupier = dest.getPiece();
-						final Alliance owner = occupier.piece_alliance();
+						final Alliance owner = piece.piece_alliance();
 						if(this.owner != owner) {
-							legal_moves.add(new AttackMove(board, this, canidate, occupier));
+							legal_moves.add(new AttackMove(board, this, canidate, piece));
 						}
 						break;
 					}
@@ -55,17 +58,17 @@ public class Rook extends Piece{
 	}
 	
 	private static boolean firstColumn(final int coord,final int offset) {
-		return BoardUtils.FIRST_COLUMN [coord] && offset == -1;	
+		return BoardUtils.FIRST_COLUMN.get(coord) && offset == -1;	
 	}
 	
 	
 	private static boolean eighthColumn(final int coord, final int offset) {
-		return BoardUtils.EIGHTH_COLUMN[coord] && offset == 1;
+		return BoardUtils.EIGHTH_COLUMN.get(coord)&& offset == 1;
 	}
 
 	@Override
-	public Rook movePiece(Move move) {
-		return new Rook(move.getDest(),move.getPiece().piece_alliance());
+	public Rook movePiece(final Move move) {
+		return new Rook(move.getDest(),move.getPiece().piece_alliance(),false);
 	}
 
 }

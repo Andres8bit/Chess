@@ -9,15 +9,19 @@ import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
 import com.chess.engine.board.Move.AttackMove;
 import com.chess.engine.board.Move.MajorMove;
-import com.chess.engine.board.Tile;
+import com.chess.engine.peices.Piece.PieceType;
 import com.google.common.collect.ImmutableList;
 
 public class Bishop extends Piece{
 	private final static int[] POSSIBLE_MOVES = {-9,-7,7,9};
 
+	
+	public Bishop(final int pos, final Alliance owner, final Boolean first) {
+		super(pos,owner,PieceType.BISHOP,first);
+	}
+	
 	public Bishop(final int pos,final Alliance owner) {
-		super(pos, owner,PieceType.BISHOP);
-		// TODO Auto-generated constructor stub
+		super(pos, owner,PieceType.BISHOP,true);
 	}
 
 	@Override
@@ -29,21 +33,20 @@ public class Bishop extends Piece{
 	public Collection<Move> legalMoves(final Board board) {
 	final List<Move> legal_moves = new ArrayList<>();
 	for(final int offset: POSSIBLE_MOVES) {
-		int canidate = this.position;
-		while(BoardUtils.isValidTile(canidate)) {
-			if(firstColumn(canidate,offset) ||
-				eighthColumn(canidate,offset))
+		int canidateDest = this.position;
+		while(BoardUtils.isValidTile(canidateDest)) {
+			if(firstColumn(canidateDest,offset) ||
+				eighthColumn(canidateDest,offset))
 				break;
-			canidate += offset;
-			if(BoardUtils.isValidTile(canidate)) {
-				final Tile dest = board.getTile(canidate);
-				if(!dest.isOccupied()) {
-					legal_moves.add(new MajorMove(board, this, canidate));
+			canidateDest += offset;
+			if(BoardUtils.isValidTile(canidateDest)) {
+				final Piece piece = board.getPiece(canidateDest);
+				if(piece == null) {
+					legal_moves.add(new MajorMove(board, this, canidateDest));
 				}else {
-					final Piece occupier = dest.getPiece();
-					final Alliance owner = occupier.piece_alliance();
+					final Alliance owner = piece.piece_alliance();
 					if(this.owner != owner) {
-						legal_moves.add(new AttackMove(board, this, canidate, occupier));
+						legal_moves.add(new AttackMove(board, this, canidateDest, piece));
 					}
 					break;
 				}
@@ -55,17 +58,17 @@ public class Bishop extends Piece{
 	}
 	
 	private static boolean firstColumn(final int coord,final int offset) {
-		return BoardUtils.FIRST_COLUMN [coord] && (offset == -9 || offset == 7);	
+		return BoardUtils.FIRST_COLUMN.get(coord) && (offset == -9 || offset == 7);	
 	}
 	
 	
 	private static boolean eighthColumn(final int coord, final int offset) {
-		return BoardUtils.EIGHTH_COLUMN[coord] && (offset == -7 || offset == 9);
+		return BoardUtils.EIGHTH_COLUMN.get(coord) && (offset == -7 || offset == 9);
 	}
 
 	@Override
 	public Bishop movePiece(Move move) {
-		return new Bishop(move.getDest(),move.getPiece().piece_alliance());
+		return new Bishop(move.getDest(),move.getPiece().piece_alliance(),false);
 	}
 
 }

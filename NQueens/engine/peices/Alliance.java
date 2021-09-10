@@ -7,9 +7,15 @@ import com.chess.engine.player.WPlayer;
 public enum Alliance {
 	
 BLACK{
+	
+	@Override
+	public String toString() {
+		return "black";
+	}
+	
 	@Override
 	public int direction() {
-		return -1;
+		return 1;
 	}
 
 	@Override
@@ -30,8 +36,13 @@ BLACK{
 WHITE{
 
 	@Override
+	public String toString() {
+		return "white";
+	}
+	
+	@Override
 	public int direction() {
-		return 1;
+		return -1;
 	}
 
 	@Override
