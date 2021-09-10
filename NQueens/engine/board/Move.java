@@ -7,20 +7,38 @@ import com.chess.engine.peices.Rook;
 
 
 public abstract class Move {
- final Board board;
- final Piece piece;
- final int dest;
-
+ protected final Board board;
+ protected final Piece piece;
+ protected final int dest;
+ protected final boolean firstMove;
  public static final Move NULL_MOVE = new NullMove();
-  private Move(final Board board, final Piece to_move, final int destination ){
+  
+ 
+ private Move(final Board board, final Piece to_move, final int destination ){
 	this.board = board;
 	this.piece = to_move;
 	this.dest = destination;
+	this.firstMove = piece.isFirstMove();
   }
-
+ 
+ private Move(final Board board, final int destination ){
+	this.board = board;
+	this.piece = null;
+	this.dest = destination;
+	this.firstMove = false;
+  }
+  
+ @Override
+ public String toString() {
+	 if(this.piece != null) {
+		 return piece.toString() + " " + BoardUtils.getPos(this.piece.pos()) + ":" + BoardUtils.getPos(dest);
+	 }
+	 return "";
+}
+ 
   @Override
   public int hashCode() {
-	final int prime = 3;
+	final int prime = 31;
 	int result = 1;
 
 	result = prime * result + this.getDest();
@@ -68,26 +86,34 @@ public abstract class Move {
   }
 
   public Board execute() {
-		   final Builder builder = new Builder();
-			// TODO hash code and equals for pieces
-		   for(final Piece piece: this.board.curPlayer().getActivePieces()) {
-				if(!this.piece.equals(piece)) {
-					builder.setPiece(piece);
-				}
-			}
+	  
+      final Board.Builder builder = new Builder();
+      this.board.curPlayer().getActivePieces().stream().filter(piece -> !this.piece.equals(piece)).forEach(builder::setPiece);
+      this.board.curPlayer().opponent().getActivePieces().forEach(builder::setPiece);
+      
+      builder.setPiece(this.piece.movePiece(this));
 
-		   for(final Piece piece: this.board.curPlayer().opponent().getActivePieces()) {
-				builder.setPiece(piece);
-			}
-
-		   // move the piece
-		    builder.setPiece(this.piece.movePiece(this));
-		    builder.setMoveMaker(this.board.curPlayer().opponent().getAlliance());
-
-			return builder.build();
+      builder.setMoveMaker(this.board.curPlayer().opponent().getAlliance());
+      builder.setMoveTransition(this);
+      return builder.build();
 	}
 
 
+  public static class MajorMove extends Move {
+
+      public MajorMove(final Board board,
+                       final Piece pieceMoved,
+                       final int destinationCoordinate) {
+          super(board, pieceMoved, destinationCoordinate);
+      }
+
+      @Override
+      public boolean equals(final Object other) {
+          return this == other || other instanceof MajorMove && super.equals(other);
+      }
+
+  }
+  
 public static class AttackMove extends Move{
 		final Piece attackPiece;
 
@@ -96,6 +122,11 @@ public static class AttackMove extends Move{
 			this.attackPiece = attack;
 	}
 
+	@Override
+	public Board execute() {
+		return null;
+	}
+	
 	@Override
 	public int hashCode() {
 		return this.attackPiece.hashCode() + super.hashCode();
@@ -117,11 +148,6 @@ public static class AttackMove extends Move{
 
 	}
 
-	@Override
-	public Board execute() {
-		// TODO Auto-generated method stub
-		return null;
-	 }
 
 	@Override
 	public boolean isAttack() {
@@ -162,7 +188,7 @@ public static class AttackMove extends Move{
 		 final Builder builder = new Builder();
 
 		 for(final Piece piece: this.board.curPlayer().getActivePieces()) {
-			 if(!this.getPiece().equals(piece)) {
+			 if(!this.piece.equals(piece)) {
 				 builder.setPiece(piece);
 			 }
 		 }
@@ -176,6 +202,11 @@ public static class AttackMove extends Move{
 		 builder.setEnPassantPawn(movedPawn);
 		 builder.setMoveMaker(this.board.curPlayer().opponent().getAlliance());
 		 return builder.build();
+	 }
+	 
+	 @Override
+	 public String toString() {
+		 return BoardUtils.getPos(this.piece.pos());
 	 }
  }
 
@@ -226,8 +257,6 @@ public static final class KingSideCastleMove extends CastleMove{
 
 			public KingSideCastleMove(final Board board,final  Piece to_move,final int destination, final Rook castleRook, final int rookStart, final int rookDest) {
 				super(board, to_move, destination, castleRook,rookStart , rookDest);
-
-
 			}
 
 			@Override
@@ -252,7 +281,7 @@ public static final class QueenSideCastleMove extends CastleMove{
 public static final class NullMove extends Move{
 
 	public NullMove() {
-		super(null,null, -1);
+		super(null,-1);
 	}
 
 	@Override
@@ -267,6 +296,10 @@ public static class MoveFactory {
 	throw new RuntimeException("Cannot Instantiate");
  }
 
+ public static Move getNullMove() {
+     return NULL_MOVE;
+ }
+ 
  public static Move createMove(final Board board, final int curPos, final int destPos) {
 
 	 for(final Move move: board.getAllLegalMoves()) {
@@ -274,6 +307,7 @@ public static class MoveFactory {
 			 return move;
 		 }
 	 }
+	 
 	 return NULL_MOVE;
  }
 }

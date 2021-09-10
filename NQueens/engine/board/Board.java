@@ -16,6 +16,7 @@ import com.chess.engine.peices.Queen;
 import com.chess.engine.peices.Rook;
 import com.chess.engine.player.BPlayer;
 import com.chess.engine.player.Player;
+import com.chess.engine.board.Move.MoveFactory;
 import com.chess.engine.player.WPlayer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -27,6 +28,7 @@ public final class Board {
 	private final WPlayer wPlayer;
 	private final BPlayer bPlayer;
 	private final Player curPlayer;
+	private final Move transitionMove;
 	
 	private Board(Builder builder) {
 		this.board = createBoard(builder);
@@ -35,10 +37,13 @@ public final class Board {
 		
 		final Collection<Move> wLegalMoves = legalMoves(this.wPieces);
 		final Collection<Move> bLegalMoves = legalMoves(this.bPieces);
-		
+	
+
 		this.wPlayer = new WPlayer(this,wLegalMoves, bLegalMoves);
 		this.bPlayer = new BPlayer(this, wLegalMoves,bLegalMoves);
 		this.curPlayer = builder.nextMove.choosePlayer(this.wPlayer,this.bPlayer);
+
+		this.transitionMove = builder.transitionMove != null ? builder.transitionMove : MoveFactory.getNullMove();
 	}
 	
 	@Override
@@ -52,6 +57,9 @@ public final class Board {
 			}
 		}
 		return builder.toString();	
+	}
+	public Move getTransitionMove() {
+	 return this.transitionMove;	
 	}
 	
 	public Player curPlayer() {
@@ -74,27 +82,22 @@ public final class Board {
 		return this.wPlayer;
 	}
 	
-	private static String prettyPrint(Tile tile) {
-		if(tile.isOccupied()) {
-			return tile.getPiece().piece_alliance().isBlack() ? tile.toString().toLowerCase():
-				   tile.toString();
-		}
-		return tile.toString();
-	}
+
 
 	private Collection<Move> legalMoves(Collection<Piece> pieces) {
 		final List<Move> legalMoves = new ArrayList<>();
 		for(final Piece piece: pieces) {
 			legalMoves.addAll(piece.legalMoves(this));
 		} 
+		
 		return ImmutableList.copyOf(legalMoves);
 	}
 
-	private static Collection<Piece> activePieces(List<Tile> board, Alliance owner) {
+	private static Collection<Piece> activePieces(final List<Tile> board,final Alliance owner) {
 		final List<Piece> active = new ArrayList<>();
 		for(final Tile tile: board) {
 			if(tile.isOccupied()) {
-				final Piece piece= tile.getPiece();
+				final Piece piece = tile.getPiece();
 				if(piece.piece_alliance() == owner) {
 					active.add(piece);
 				}
@@ -162,12 +165,15 @@ public final class Board {
 	public static class Builder{
 		Map<Integer,Piece>boardConfig;
 		Alliance nextMove;
+		Pawn enPassantPawn;
+		Move transitionMove;
 		
 		public Builder() {
-			this.boardConfig = new HashMap<>();
+			this.boardConfig = new HashMap<>(32, 1.0f);
 		}
 		
 		public Builder setPiece(final Piece piece) {
+			System.out.println("set Piece: " + piece.toString() + " " + " at " + piece.pos());
 			this.boardConfig.put(piece.pos(), piece);
 			return this;
 		}
@@ -181,10 +187,28 @@ public final class Board {
 		public Board build() {
 			return new Board(this);
 		}
+
+		public void setEnPassantPawn(Pawn pawn) {
+			this.enPassantPawn = pawn;
+			
+		}
+
+        public Builder setMoveTransition(final Move transitionMove) {
+            this.transitionMove = transitionMove;
+            return this;
+        }
 		
 	}
 
 	public Iterable<Move> getAllLegalMoves() {
 		return  Iterables.unmodifiableIterable(Iterables.concat(this.wPlayer.getLegalMoves(),this.bPlayer.getLegalMoves()));
+	}
+
+	public Piece getPiece(int coord) {
+		return this.getTile(coord).getPiece();
+	}
+
+	public Iterable<Piece> getAllPieces() {
+		return Iterables.unmodifiableIterable(Iterables.concat(this.wPlayer.getActivePieces(),this.bPlayer.getActivePieces()));
 	}
 }
