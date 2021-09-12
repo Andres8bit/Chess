@@ -29,6 +29,7 @@ public class CapturePanel extends JPanel{
 	private static final Color PANEL_COLOR = Color.decode("#d9deda");
 	private final JPanel northPanel;
 	private final JPanel southPanel;
+	private static String pieceIconPath = "C:\\Users\\andres\\eclipse-workspace\\NQueens\\art\\";
 	private static final EtchedBorder PANEL_BORDER = new EtchedBorder(EtchedBorder.RAISED);
 	
 	public CapturePanel() {
@@ -55,6 +56,7 @@ public class CapturePanel extends JPanel{
 		
 		for(final Move move: log.getMoves()) {
 			if(move.isAttack()) {
+				System.out.println("is attack");
 				final Piece taken = move.getAttackPiece();
 				if(taken.piece_alliance().isWhite()) {
 					wTaken.add(taken);
@@ -87,7 +89,8 @@ public class CapturePanel extends JPanel{
 		
 		for(final Piece taken: wTaken) {
 			try {
-				final BufferedImage img = ImageIO.read(new File( "C:\\Users\\andres\\eclipse-workspace\\NQueens\\art\\" + taken.piece_alliance().toString().substring(0,1) + ".PNG"));
+				final BufferedImage img = ImageIO.read(new File( pieceIconPath + taken.piece_alliance().toString().substring(0,1)
+						+ taken.toString() + ".PNG"));
 				final ImageIcon icon = new ImageIcon(img);
 				final JLabel imgLabel = new JLabel(icon);
 				this.southPanel.add(imgLabel);
@@ -100,7 +103,8 @@ public class CapturePanel extends JPanel{
 		
 		for(final Piece taken: bTaken) {
 			try {
-				final BufferedImage img = ImageIO.read(new File( "C:\\Users\\andres\\eclipse-workspace\\NQueens\\art\\" + taken.piece_alliance().toString().substring(0,1) + ".PNG"));
+				final BufferedImage img = ImageIO.read(new File( pieceIconPath + taken.piece_alliance().toString().substring(0,1)
+						+ taken.toString() + ".PNG"));
 				final ImageIcon icon = new ImageIcon(img);
 				final JLabel imgLabel = new JLabel(icon);
 				this.southPanel.add(imgLabel);

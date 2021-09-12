@@ -40,9 +40,7 @@ public class HistoryPanel extends JPanel{
 	void redo(final Board board, final MoveLog log) {
         int currentRow = 0;
         this.model.clear();
-        System.out.println(log.size());
         for (final Move move : log.getMoves()) {
-          System.out.println(move.toString());
             final String moveText = move.toString();
             if (move.getPiece().piece_alliance().isWhite()) {
                 this.model.setValueAt(moveText, currentRow, 0);

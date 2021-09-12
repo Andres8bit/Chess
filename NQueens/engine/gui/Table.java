@@ -25,12 +25,18 @@ package com.chess.gui;
 //import javax.swing.JMenuItem;
 //import javax.swing.JPanel;
 import javax.imageio.ImageIO;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.*;
 import java.util.List;
 
@@ -273,9 +279,12 @@ public class Table {
 							playerPiece = srcTile.getPiece();
 							if(playerPiece == null) {
 								srcTile = null;
+							}else {
+								System.out.println("srcTile -> " + BoardUtils.getPos(tileId));
 							}
 						}else {
 							destTile = chessBoard.getTile(tileId);
+							System.out.println("Selected tile ->" + BoardUtils.getPos(destTile.getCoord()));
 							final Move move = MoveFactory.createMove(chessBoard, srcTile.getCoord(), tileId);
 							final MoveTransition transition = chessBoard.curPlayer().makeMove(move);
 							
@@ -293,6 +302,7 @@ public class Table {
 								logPanel.redo(chessBoard,log);
 								capturesPanel.redo(log);
 								boardPanel.drawBoard(chessBoard);
+								playSound();
 							
 						});
 					}
@@ -396,6 +406,15 @@ public class Table {
 					e.printStackTrace();
 				}
 			}
+		}
+		
+		
+		
+		private void playSound() {
+		    
+			
+
+
 		}
 	}
 }
