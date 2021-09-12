@@ -14,6 +14,7 @@ import com.chess.engine.peices.Pawn;
 import com.chess.engine.peices.Piece;
 import com.chess.engine.peices.Queen;
 import com.chess.engine.peices.Rook;
+import com.chess.engine.player.Ai;
 import com.chess.engine.player.BPlayer;
 import com.chess.engine.player.Player;
 import com.chess.engine.board.Move.MoveFactory;
@@ -25,10 +26,14 @@ public final class Board {
 	private final List<Tile> board;
 	private final Collection<Piece>wPieces;
 	private final Collection<Piece>bPieces;
+	//private final Ai AiPlayer;
+	//private boolean isAIActive;
+	//
 	private final WPlayer wPlayer;
 	private final BPlayer bPlayer;
 	private final Player curPlayer;
 	private final Move transitionMove;
+	private final Pawn enPassantPawn;
 	
 	private Board(Builder builder) {
 		this.board = createBoard(builder);
@@ -38,7 +43,7 @@ public final class Board {
 		final Collection<Move> wLegalMoves = legalMoves(this.wPieces);
 		final Collection<Move> bLegalMoves = legalMoves(this.bPieces);
 	
-
+		this.enPassantPawn = builder.enPassantPawn;
 		this.wPlayer = new WPlayer(this,wLegalMoves, bLegalMoves);
 		this.bPlayer = new BPlayer(this, wLegalMoves,bLegalMoves);
 		this.curPlayer = builder.nextMove.choosePlayer(this.wPlayer,this.bPlayer);
@@ -173,7 +178,6 @@ public final class Board {
 		}
 		
 		public Builder setPiece(final Piece piece) {
-			System.out.println("set Piece: " + piece.toString() + " " + " at " + piece.pos());
 			this.boardConfig.put(piece.pos(), piece);
 			return this;
 		}
@@ -188,7 +192,8 @@ public final class Board {
 			return new Board(this);
 		}
 
-		public void setEnPassantPawn(Pawn pawn) {
+		public void setEnPassantPawn(final Pawn pawn) {
+			System.out.println("setting enPassant Pawn");
 			this.enPassantPawn = pawn;
 			
 		}
@@ -210,5 +215,9 @@ public final class Board {
 
 	public Iterable<Piece> getAllPieces() {
 		return Iterables.unmodifiableIterable(Iterables.concat(this.wPlayer.getActivePieces(),this.bPlayer.getActivePieces()));
+	}
+
+	public Pawn getEnPassant() {
+		return this.enPassantPawn;
 	}
 }
