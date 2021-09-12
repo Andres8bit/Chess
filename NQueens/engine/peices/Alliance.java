@@ -1,5 +1,6 @@
 package com.chess.engine.peices;
 
+import com.chess.engine.board.BoardUtils;
 import com.chess.engine.player.BPlayer;
 import com.chess.engine.player.Player;
 import com.chess.engine.player.WPlayer;
@@ -32,6 +33,16 @@ BLACK{
 	public Player choosePlayer(final WPlayer wplayer,final BPlayer bplayer){
 		return bplayer;
 	}
+
+	@Override
+	protected int getOppositeDirection() {
+		return -1;
+	}
+
+	@Override
+	public boolean isPromotionSquare(int pos) {
+		return BoardUtils.EIGHTH_ROW.get(pos);
+	}
 },
 WHITE{
 
@@ -59,12 +70,23 @@ WHITE{
 	public Player choosePlayer(final WPlayer wplayer,final BPlayer bplayer){
 		return  wplayer;
 	}
+
+	@Override
+	protected int getOppositeDirection() {
+		return 1;
+	}
+
+	@Override
+	public boolean isPromotionSquare(int pos) {
+		return BoardUtils.FIRST_ROW.get(pos);
+	}
 	
 };
 
 public abstract int direction();
 public abstract boolean isWhite();
 public abstract boolean isBlack();
-
+public abstract boolean isPromotionSquare(int pos);
 public abstract Player choosePlayer(WPlayer wplayer,BPlayer bplayer);
+protected abstract int getOppositeDirection();
 }

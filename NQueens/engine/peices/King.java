@@ -9,7 +9,6 @@ import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
 import com.chess.engine.board.Move.AttackMove;
 import com.chess.engine.board.Move.MajorMove;
-import com.chess.engine.peices.Piece.PieceType;
 import com.google.common.collect.ImmutableList;
 
 public class King extends Piece{
@@ -37,6 +36,7 @@ public class King extends Piece{
 			if(firstColumn(this.position,offset)|| eighthColumn(this.position,offset)) {
 					continue;
 			}
+			
 			
 			final int canidate = this.position + offset;
 			if(BoardUtils.isValidTile(canidate)) {

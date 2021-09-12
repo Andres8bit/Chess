@@ -7,9 +7,8 @@ import java.util.List;
 import com.chess.engine.board.Board;
 import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
-import com.chess.engine.board.Move.AttackMove;
+import com.chess.engine.board.Move.MajorAttackMove;
 import com.chess.engine.board.Move.MajorMove;
-import com.chess.engine.peices.Piece.PieceType;
 import com.google.common.collect.ImmutableList;
 
 public class Bishop extends Piece{
@@ -46,7 +45,7 @@ public class Bishop extends Piece{
 				}else {
 					final Alliance owner = piece.piece_alliance();
 					if(this.owner != owner) {
-						legal_moves.add(new AttackMove(board, this, canidateDest, piece));
+						legal_moves.add(new MajorAttackMove(board, this, canidateDest, piece));
 					}
 					break;
 				}

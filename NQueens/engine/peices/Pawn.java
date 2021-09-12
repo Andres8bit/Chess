@@ -9,6 +9,7 @@ import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
 import com.chess.engine.board.Move.MajorMove;
 import com.chess.engine.board.Move.PawnAttackMove;
+import com.chess.engine.board.Move.PawnEnPassantAttackMove;
 import com.chess.engine.board.Move.PawnJumpMove;
 import com.chess.engine.board.Move.PawnMove;
 import com.chess.engine.peices.Piece.PieceType;
@@ -42,45 +43,112 @@ public class Pawn extends Piece{
 				continue;
 			}
 			
-			if(offset == 8 && board.getPiece(candidate) == null) {
-				legal_moves.add(new MajorMove(board,this,candidate));
-			
-			}else if( offset == 16 && this.isFirstMove() && ((BoardUtils.SEVENTH_ROW.get(this.position) && this.piece_alliance().isBlack())
-					|| (BoardUtils.SECOND_ROW.get(this.position) && this.piece_alliance().isWhite()))) {
-				final int behind = this.position + (this.owner.direction() * 8);
-				
-				if(board.getPiece(behind) == null && board.getPiece(candidate) == null) {
-					legal_moves.add(new PawnJumpMove(board,this,candidate));
-				}
-				
-			}else if(offset == 7 &&
-					!((BoardUtils.EIGHTH_COLUMN.get(this.position) && this.owner.isWhite()
-					|| (BoardUtils.FIRST_COLUMN.get(this.position)&& this.owner.isBlack())))) {
-					if(board.getPiece(candidate) != null) {
-						final Piece piece = board.getPiece(candidate);
-					
-						if(this.owner != piece.piece_alliance()) {
-			
-							legal_moves.add(new MajorMove(board,this,candidate));
-						}
-					}
-			}else if(offset == 9 &&
-					!((BoardUtils.FIRST_COLUMN.get(this.position) && this.owner.isWhite()
-					|| (BoardUtils.EIGHTH_COLUMN.get(this.position)&& this.owner.isBlack())))) {
-				
-				if(board.getPiece(candidate) != null) {
-					final Piece piece = board.getPiece(candidate);
-					if(this.owner != piece.piece_alliance()) {
-						legal_moves.add(new MajorMove(board,this,candidate));
-					}
-				}
+			//first move of pawn check for space to jump
+			if(this.isFirstMove() && this.pawnJumpCheck(board,offset)) {
+			   		legal_moves.add(new PawnJumpMove(board,this,candidate));
 			}
+			
+			//possible enPassant opening
+			if(board.getEnPassant() != null && this.enPassantAttackCheck(board,offset)) {
+					final Piece piece = board.getEnPassant();
+					final Move move = new PawnEnPassantAttackMove(board, this, candidate, piece);
+					legal_moves.add(move);
+			}
+			
+			//base attack check
+			if( (offset == 7 || offset == 9) && this.pawnAttackCheck(board,offset)) {
+					final Piece piece= board.getPiece(candidate);
+					legal_moves.add(new PawnAttackMove(board,this,candidate,piece));
+			}
+			
+			// regular move forward
+			if(offset == 8 && board.getPiece(candidate) == null) {
+				legal_moves.add(new PawnMove(board,this,candidate));		
+			}
+
 		}
 		return ImmutableList.copyOf(legal_moves);
 	}
 
+	private boolean enPassantAttackCheck(Board board, int offset) {
+		final int candidate = this.position + (this.owner.direction() * offset);
+		
+		if(offset != 7 && offset != 9 || board.getPiece(candidate)!= null) {
+				return false;
+		}
+	
+		
+		if(offset == 7 && !((BoardUtils.EIGHTH_COLUMN.get(this.position) && this.owner.isWhite()
+				           || (BoardUtils.FIRST_COLUMN.get(this.position)&& this.owner.isBlack())))) {
+			
+			if(board.getEnPassant().pos() == (this.position + (this.owner.getOppositeDirection()))){
+				final Piece piece = board.getEnPassant();
+           
+				if (this.owner != piece.piece_alliance()) {
+					return true;
+				}
+			}
+			
+		}else if(!((BoardUtils.FIRST_COLUMN.get(this.position) && this.owner.isWhite()
+				|| (BoardUtils.EIGHTH_COLUMN.get(this.position)&& this.owner.isBlack())))){
+			
+			if(board.getEnPassant().pos() == (this.position - (this.owner.getOppositeDirection()))){
+				final Piece piece = board.getEnPassant();
+           
+				if (this.owner != piece.piece_alliance()) {
+					return true;
+				}
+			}
+		}
+		
+		return false;
+	}
+
+	private boolean pawnAttackCheck(final Board board,final int offset) {
+		final int candidate = this.position + (this.owner.direction() * offset);
+		
+		 if(offset == 7 &&
+					!((BoardUtils.EIGHTH_COLUMN.get(this.position) && this.owner.isWhite()
+					|| (BoardUtils.FIRST_COLUMN.get(this.position)&& this.owner.isBlack())))) {
+				
+				if(board.getPiece(candidate) != null) {
+						final Piece piece = board.getPiece(candidate);
+							return this.owner != piece.piece_alliance();
+					}				
+			}else if(offset == 9 &&
+					!((BoardUtils.FIRST_COLUMN.get(this.position) && this.owner.isWhite()
+					|| (BoardUtils.EIGHTH_COLUMN.get(this.position)&& this.owner.isBlack())))) {
+	
+				if(board.getPiece(candidate) != null) {					
+					final Piece piece = board.getPiece(candidate);
+					   		return this.owner != piece.piece_alliance();					
+				}
+			}
+		return false;
+	}
+
+	private boolean pawnJumpCheck(final Board board,final int offset ) {
+		if( offset == 16 && (
+			(BoardUtils.SEVENTH_ROW.get(this.position) && this.piece_alliance().isBlack()) 
+								            || 
+			(BoardUtils.SECOND_ROW.get(this.position) && this.piece_alliance().isWhite()))) {
+				final int candidate = this.position + (this.owner.direction() * offset);
+				final int behind = this.position + (this.owner.direction() * 8);
+			
+				 if(board.getPiece(behind) == null && board.getPiece(candidate) == null) { 
+					 	return true;
+				 }
+		}
+		return false;
+	}
+
 	@Override
 	public Pawn movePiece(final Move move) {
+		System.out.println("move Pawn");
 		return new Pawn(move.getDest(),move.getPiece().piece_alliance(),false);
+	}
+
+	public Piece promote() {
+		return  new Queen(this.position, this.owner, false);
 	}
 }

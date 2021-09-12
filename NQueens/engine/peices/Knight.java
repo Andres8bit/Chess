@@ -6,8 +6,7 @@ import com.chess.engine.board.Board;
 import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
 import com.chess.engine.board.Move.MajorMove;
-import com.chess.engine.peices.Piece.PieceType;
-import com.chess.engine.board.Move.AttackMove;
+import com.chess.engine.board.Move.MajorAttackMove;
 import com.google.common.collect.ImmutableList;
 
 public class Knight extends Piece{
@@ -44,7 +43,7 @@ public class Knight extends Piece{
 				}else {
 					final Alliance piece_owner = piece.piece_alliance();
 					if(this.owner != piece_owner) {
-						legal_move.add(new AttackMove(board, this, canidate, piece));
+						legal_move.add(new MajorAttackMove(board, this, canidate, piece));
 					}
 				}
 			}
