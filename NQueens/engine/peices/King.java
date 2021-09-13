@@ -7,7 +7,8 @@ import java.util.List;
 import com.chess.engine.board.Board;
 import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
-import com.chess.engine.board.Move.AttackMove;
+
+import com.chess.engine.board.Move.MajorAttackMove;
 import com.chess.engine.board.Move.MajorMove;
 import com.google.common.collect.ImmutableList;
 
@@ -47,7 +48,7 @@ public class King extends Piece{
 			}else {
 				final Alliance owner = occupier.owner;
 				if(owner != occupier.piece_alliance()) {
-					legal_moves.add(new AttackMove(board,this,canidate,occupier));
+					legal_moves.add(new MajorAttackMove(board,this,canidate,occupier));
 				}
 			}
 		}

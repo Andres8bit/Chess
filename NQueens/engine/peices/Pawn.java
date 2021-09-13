@@ -7,12 +7,9 @@ import java.util.List;
 import com.chess.engine.board.Board;
 import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
-import com.chess.engine.board.Move.MajorMove;
 import com.chess.engine.board.Move.PawnAttackMove;
 import com.chess.engine.board.Move.PawnEnPassantAttackMove;
-import com.chess.engine.board.Move.PawnJumpMove;
 import com.chess.engine.board.Move.PawnMove;
-import com.chess.engine.peices.Piece.PieceType;
 import com.google.common.collect.ImmutableList;
 
 public class Pawn extends Piece{
@@ -42,30 +39,28 @@ public class Pawn extends Piece{
 			if(!BoardUtils.isValidTile(candidate)) {
 				continue;
 			}
-			
-			//first move of pawn check for space to jump
+			//first move of pawn  && check for space to jump
 			if(this.isFirstMove() && this.pawnJumpCheck(board,offset)) {
-			   		legal_moves.add(new PawnJumpMove(board,this,candidate));
+			   		legal_moves.add(new PawnMove(board,this,candidate));
 			}
-			
 			//possible enPassant opening
 			if(board.getEnPassant() != null && this.enPassantAttackCheck(board,offset)) {
 					final Piece piece = board.getEnPassant();
 					final Move move = new PawnEnPassantAttackMove(board, this, candidate, piece);
-					legal_moves.add(move);
+					legal_moves.add(new PawnEnPassantAttackMove(board, this, candidate, piece));
+					System.out.println("Added enPassant Attack from :" + BoardUtils.getPos(move.getCur()) + " to " + BoardUtils.getPos(move.getDest()));
 			}
-			
 			//base attack check
 			if( (offset == 7 || offset == 9) && this.pawnAttackCheck(board,offset)) {
 					final Piece piece= board.getPiece(candidate);
 					legal_moves.add(new PawnAttackMove(board,this,candidate,piece));
+					System.out.println("Added pawn Attack :" + new PawnAttackMove(board, this, candidate, piece).toString());
 			}
-			
 			// regular move forward
 			if(offset == 8 && board.getPiece(candidate) == null) {
 				legal_moves.add(new PawnMove(board,this,candidate));		
+				System.out.println("Added pawn move :" + new PawnMove(board, this, candidate).toString());
 			}
-
 		}
 		return ImmutableList.copyOf(legal_moves);
 	}
@@ -84,9 +79,7 @@ public class Pawn extends Piece{
 			if(board.getEnPassant().pos() == (this.position + (this.owner.getOppositeDirection()))){
 				final Piece piece = board.getEnPassant();
            
-				if (this.owner != piece.piece_alliance()) {
-					return true;
-				}
+				return this.owner != piece.piece_alliance();
 			}
 			
 		}else if(!((BoardUtils.FIRST_COLUMN.get(this.position) && this.owner.isWhite()
@@ -94,10 +87,7 @@ public class Pawn extends Piece{
 			
 			if(board.getEnPassant().pos() == (this.position - (this.owner.getOppositeDirection()))){
 				final Piece piece = board.getEnPassant();
-           
-				if (this.owner != piece.piece_alliance()) {
-					return true;
-				}
+				return this.owner != piece.piece_alliance(); 
 			}
 		}
 		
@@ -115,7 +105,7 @@ public class Pawn extends Piece{
 						final Piece piece = board.getPiece(candidate);
 							return this.owner != piece.piece_alliance();
 					}				
-			}else if(offset == 9 &&
+			}else if(
 					!((BoardUtils.FIRST_COLUMN.get(this.position) && this.owner.isWhite()
 					|| (BoardUtils.EIGHTH_COLUMN.get(this.position)&& this.owner.isBlack())))) {
 	
