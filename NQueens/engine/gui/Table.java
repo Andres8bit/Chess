@@ -45,15 +45,19 @@ import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
 import com.chess.engine.board.Tile;
 import com.chess.engine.board.Move.MoveFactory;
+import com.chess.engine.peices.Alliance;
 import com.chess.engine.peices.Piece;
 import com.chess.engine.player.MoveStatus;
 import com.chess.engine.player.MoveTransition;
 import com.google.common.collect.Lists;
 
+import audio.AudioPlayer;
+
 
 
 public class Table {
 	
+
 	private Tile srcTile;
 	private Tile destTile;
 	private Piece playerPiece;
@@ -63,6 +67,9 @@ public class Table {
 	private CapturePanel capturesPanel;
 	private HistoryPanel logPanel;
 	private boolean highLightLegalMoves;
+	private boolean bAi;
+	private boolean wAi;
+	private final AudioPlayer soundEffects;
 	private final BoardPanel boardPanel;
 	private final JFrame gameFrame;
 	private static String pieceIconPath = "C:\\Users\\andres\\eclipse-workspace\\NQueens\\art\\";
@@ -80,6 +87,7 @@ public class Table {
 		this.capturesPanel = new CapturePanel();
 		this.logPanel = new HistoryPanel();
 		this.boardPanel = new BoardPanel();
+		this.soundEffects = new AudioPlayer();
 		this.log = new MoveLog();
 		final JMenuBar tableMenu = createMenuBar();
 		
@@ -92,6 +100,8 @@ public class Table {
 		this.gameFrame.add(this.logPanel,BorderLayout.EAST);
 		this.gameFrame.setVisible(true);
 		this.highLightLegalMoves = false;
+		this.bAi = false;
+		this.wAi = false;
 
 	}
 
@@ -105,6 +115,72 @@ public class Table {
 	
 	private JMenu createPreferencesMenu() {
 		final JMenu preferences = new JMenu("Preferences");
+		final JMenuItem flipBoardMenuItem = flipView();
+		final  JCheckBoxMenuItem wPlayerAi = setWhiteAi();
+		final  JCheckBoxMenuItem bPlayerAi = setBlackAi();
+		final JCheckBoxMenuItem legalMoveHighLightCheckbox = highLightMoves();
+		
+		preferences.add(flipBoardMenuItem);
+		preferences.addSeparator();
+		
+
+		preferences.add(legalMoveHighLightCheckbox);
+		preferences.addSeparator();		
+
+	    preferences.add(bPlayerAi);
+		preferences.addSeparator();
+	    
+		preferences.add(wPlayerAi);
+		
+		return preferences;
+	}
+
+	private JCheckBoxMenuItem setBlackAi() {
+		final JCheckBoxMenuItem blackAi = new JCheckBoxMenuItem("Set Black to AI",false);
+		
+		blackAi.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				bAi = blackAi.isSelected();
+			}
+		});
+		
+		return blackAi;
+	}
+	
+
+	private JCheckBoxMenuItem setWhiteAi() {
+		final JCheckBoxMenuItem whiteAi = new JCheckBoxMenuItem("Set White to AI",false);
+		
+		whiteAi.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				wAi = whiteAi.isSelected();
+			}
+		});
+		
+		return 	whiteAi;
+	}
+
+	private JCheckBoxMenuItem highLightMoves() {
+
+		final JCheckBoxMenuItem legalMoveHighLight =  new JCheckBoxMenuItem("HighLight Legal Moves",false);
+		
+		legalMoveHighLight.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				highLightLegalMoves = legalMoveHighLight.isSelected();
+				
+			}
+		});
+		
+		return legalMoveHighLight;
+	}
+
+	private JMenuItem flipView() {
 		final JMenuItem flipBoardMenuItem = new JMenuItem("Flip Board");
 		
 		flipBoardMenuItem.addActionListener(new ActionListener() {
@@ -117,21 +193,8 @@ public class Table {
 			
 		});
 		
-		preferences.add(flipBoardMenuItem);
-		preferences.addSeparator();
-		final JCheckBoxMenuItem legalMoveHighLightCheckbox = new JCheckBoxMenuItem("HighLight Legal Moves",false);
+		return flipBoardMenuItem;
 		
-		legalMoveHighLightCheckbox.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				highLightLegalMoves = legalMoveHighLightCheckbox.isSelected();
-				
-			}
-		});
-		preferences.add(legalMoveHighLightCheckbox);
-		
-		return preferences;
 	}
 
 	private JMenu createFileMenu() {
@@ -263,78 +326,7 @@ public class Table {
 			setPreferredSize(TILE_PANEL_DIMENSION);
 			assignTileColor();
 			assignPieceIcon(chessBoard);
-		
-			addMouseListener(new MouseListener() {
-
-				@Override
-				public void mouseClicked(final MouseEvent e) {
-					
-					if(SwingUtilities.isRightMouseButton(e)) {
-						srcTile = null;
-						destTile = null;
-						//playerPiece = null;
-					}else if(SwingUtilities.isLeftMouseButton(e)) {
-						if(srcTile == null) {
-							srcTile = chessBoard.getTile(tileId);
-							playerPiece = srcTile.getPiece();
-							if(playerPiece == null) {
-								srcTile = null;
-							}else {
-								System.out.println("srcTile -> " + BoardUtils.getPos(tileId));
-							}
-						}else {
-							destTile = chessBoard.getTile(tileId);
-							System.out.println("Selected tile ->" + BoardUtils.getPos(destTile.getCoord()));
-							final Move move = MoveFactory.createMove(chessBoard, srcTile.getCoord(), tileId);
-							final MoveTransition transition = chessBoard.curPlayer().makeMove(move);
-							
-							if(transition.getMoveStatus().isDone()) {
-								chessBoard = transition.getToBoard();
-								log.addMove(move);
-							}
-							
-							srcTile = null;
-							destTile = null;
-							playerPiece = null;				
-						}
-						
-						SwingUtilities.invokeLater(() -> {
-								logPanel.redo(chessBoard,log);
-								capturesPanel.redo(log);
-								boardPanel.drawBoard(chessBoard);
-								playSound();
-							
-						});
-					}
-					
-				}
-
-				@Override
-				public void mousePressed(final MouseEvent e) {
-					// TODO Auto-generated method stub
-					
-				}
-
-				@Override
-				public void mouseReleased(final MouseEvent e) {
-					// TODO Auto-generated method stub
-					
-				}
-
-				@Override
-				public void mouseEntered(final MouseEvent e) {
-					// TODO Auto-generated method stub
-					
-				}
-
-				@Override
-				public void mouseExited(final MouseEvent e) {
-					// TODO Auto-generated method stub
-					
-				}
-				
-				
-			});
+			eventHandler();
 			validate();
 		}
 
@@ -409,12 +401,91 @@ public class Table {
 		}
 		
 		
-		
 		private void playSound() {
-		    
 			
+			soundEffects.play("C:\\Users\\andres\\eclipse-workspace\\NQueens\\soundEffects\\place.wav");
 
+		}
+		
+		private void eventHandler() {
+			addMouseListener(new MouseListener() {
 
+				@Override
+				public void mouseClicked(final MouseEvent e) {
+					// if it is a humans turn allow events
+					if((chessBoard.curPlayer().getAlliance().isWhite() && !wAi) || (chessBoard.curPlayer().getAlliance().isBlack() && !bAi) ) {
+					if(SwingUtilities.isRightMouseButton(e)) {
+						srcTile = null;
+						destTile = null;
+						//playerPiece = null;
+					}else if(SwingUtilities.isLeftMouseButton(e)) {
+						if(srcTile == null) {
+							srcTile = chessBoard.getTile(tileId);
+							playerPiece = srcTile.getPiece();
+							if(playerPiece == null) {
+								srcTile = null;
+							}else {
+									System.out.println("srcTile -> " + BoardUtils.getPos(tileId));
+								}
+							}else {
+								destTile = chessBoard.getTile(tileId);
+								System.out.println("Selected tile ->" + BoardUtils.getPos(destTile.getCoord()));
+								final Move move = MoveFactory.createMove(chessBoard, srcTile.getCoord(), tileId);
+								System.out.println("Move made by player: " + move.toString());
+								final MoveTransition transition = chessBoard.curPlayer().makeMove(move);
+							
+								if(transition.getMoveStatus().isDone()) {
+									chessBoard = transition.getToBoard();
+									log.addMove(move);
+								}
+							
+							srcTile = null;
+							destTile = null;
+							playerPiece = null;				
+						}
+						
+							SwingUtilities.invokeLater(() -> {
+								logPanel.redo(chessBoard,log);
+								capturesPanel.redo(log);
+								boardPanel.drawBoard(chessBoard);
+								playSound();	
+							});
+						}
+				 }else { // AI's Move
+					 if(bAi && chessBoard.curPlayer().getAlliance().isBlack()) {
+						 chessBoard.runAi(Alliance.BLACK);
+					 }else if(wAi && chessBoard.curPlayer().getAlliance().isWhite()) {
+						 final Move aiMove = chessBoard.runAi(Alliance.WHITE);
+					 }
+
+				 }
+				}
+
+				@Override
+				public void mousePressed(final MouseEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				@Override
+				public void mouseReleased(final MouseEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				@Override
+				public void mouseEntered(final MouseEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				@Override
+				public void mouseExited(final MouseEvent e) {
+					// TODO Auto-generated method stub
+					
+				}	
+				
+			});
 		}
 	}
 }
