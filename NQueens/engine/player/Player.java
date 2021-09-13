@@ -86,9 +86,16 @@ public abstract class Player {
 	}
 	
 	public MoveTransition makeMove(final Move move) {
+		
+		for(final Move curMove: this.legalMoves) {
+			System.out.println("looking for: " + move.toString());
+			System.out.println("current move in list of legal moves: " + curMove.toString());
+		}
         if (!this.legalMoves.contains(move)) {
+        	System.out.println("illegal move");
             return new MoveTransition(this.board, this.board, move, MoveStatus.ILLEGAL_MOVE);
         }
+        
         final Board transitionedBoard = move.execute();
         return transitionedBoard.curPlayer().opponent().isInCheck() ?
                 new MoveTransition(this.board, this.board, move, MoveStatus.LEAVES_PLAYER_IN_CHECK) :
