@@ -34,8 +34,8 @@ public class SoundEvent implements Runnable {
 		Thread temp = consumer;
 		try {
 			queue.put(SHUT_DOWN);
-			temp.join(10000L);
-			System.out.println("Event shutdown");
+			temp.join(1L);
+//			System.out.println("Event shutdown");
 		}catch(InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -67,8 +67,4 @@ public class SoundEvent implements Runnable {
 			}
 		};
 	}
-
-
-	
-	
 }

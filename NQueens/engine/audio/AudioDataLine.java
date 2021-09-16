@@ -88,7 +88,9 @@ public class AudioDataLine implements Runnable{
 		double bitSize = audioFormat.getSampleSizeInBits();
 		double channels = audioFormat.getChannels();
 		
-		
+		System.out.println("SampleRate: " + sampleRate);
+		System.out.println("bitSize: " + bitSize);
+		System.out.println("channels: " + channels);
 		if(bitSize == AudioSystem.NOT_SPECIFIED    ||
 		   sampleRate == AudioSystem.NOT_SPECIFIED ||
 		   channels == AudioSystem.NOT_SPECIFIED) {
@@ -137,7 +139,7 @@ public class AudioDataLine implements Runnable{
 			Thread temp = writer;
 			writer =  null;
 			try {
-				temp.join(10000);
+				temp.join(10);
 			}catch(InterruptedException e) {
 				
 			}
@@ -157,12 +159,12 @@ public class AudioDataLine implements Runnable{
 				
 				while(written < soundData.length) {
 					if(Thread.currentThread() != writer) {
-						System.out.println("stream canceled");
+						//System.out.println("stream canceled");
 						loopCount = 0;
 						break;
 					}else if(restart) {
 						restart = false;
-						System.out.println("Stream Canceled");
+				//		System.out.println("Stream Canceled");
 						if(loopCount != AudioStream.LOOP_CONTINOUSLY) {
 							loopCount++;
 						}
@@ -182,7 +184,7 @@ public class AudioDataLine implements Runnable{
 		}catch(Exception e) {
 			e.printStackTrace();
 		}finally {
-			System.out.println("Stream finished");
+		//	System.out.println("Stream finished");
 			dataLine.drain();
 			dataLine.stop();
 		}

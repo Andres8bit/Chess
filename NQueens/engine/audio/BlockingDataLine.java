@@ -23,7 +23,7 @@ public class BlockingDataLine extends AudioStream {
 			while(!open) {
 				condition.await();
 			}
-			System.out.println("open");
+			//System.out.println("open");
 		}catch(InterruptedException e) {
 			e.printStackTrace();
 		}finally {
@@ -39,7 +39,7 @@ public class BlockingDataLine extends AudioStream {
 			while(open) {
 				condition.await();
 			}
-			System.out.println("closed");
+			//System.out.println("closed");
 		}catch(InterruptedException e) {
 			e.printStackTrace();
 		}finally {
@@ -55,7 +55,7 @@ public class BlockingDataLine extends AudioStream {
 			while(!started) {
 				condition.await();
 			}
-			System.out.println("started");
+		//	System.out.println("started");
 		}catch(InterruptedException e) {
 			e.printStackTrace();
 		}finally {
@@ -72,7 +72,7 @@ public class BlockingDataLine extends AudioStream {
 			while(!started) {
 				condition.await();
 			}
-			System.out.println("Started looping");
+			//System.out.println("Started looping");
 		}catch(InterruptedException e) {
 			e.printStackTrace();
 		}finally {
@@ -88,7 +88,7 @@ public class BlockingDataLine extends AudioStream {
 			while(started) {
 				condition.await();
 			}
-			System.out.println("stopped");
+		//	System.out.println("stopped");
 		}catch(InterruptedException e) {
 			e.printStackTrace();
 		}finally {

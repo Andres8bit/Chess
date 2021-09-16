@@ -5,9 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 public class ResourceLoader {
-	public static InputStream load(
-			Class<?> clazz, String filePath ) {
-			// try the resource first
+	public static InputStream load(String filePath ) {
 			InputStream in = null;
 			
 			if( !( filePath == null || filePath.isEmpty() ) ) {
