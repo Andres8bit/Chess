@@ -31,7 +31,7 @@ public abstract class Move {
  @Override
  public String toString() {
 	 if(this.piece != null) {
-		 return BoardUtils.getPos(dest);
+		 return  piece.toString() + BoardUtils.getPos(dest);
 	 }
 	 return "";
 }
@@ -114,7 +114,8 @@ public abstract class Move {
 	  
 	@Override
 	public String toString() {
-		return this.piece.getType() + BoardUtils.getPos(this.dest);
+		return piece.toString() + "x" + 
+	            BoardUtils.getPos(this.dest);
 	}
   }
   
@@ -141,6 +142,12 @@ public static class AttackMove extends Move{
 			this.attackPiece = attack;
 	}
 	
+	 @Override
+	 public String toString() {
+		 return BoardUtils.getPos(this.piece.pos()).substring(0,1) + "x" + 
+	            BoardUtils.getPos(this.dest);
+	 }
+	 
 	@Override
 	public int hashCode() {
 		return this.attackPiece.hashCode() + super.hashCode();
@@ -183,12 +190,7 @@ public static class AttackMove extends Move{
 	 public boolean equals(final Object other) {
 		 return this == other || other instanceof PawnMove && super.equals(other);
 	 }
-	 
-	 @Override
-	 public String toString() {
-		 return BoardUtils.getPos(this.dest);
-	 }
- }
+}
 
  public static  class PawnAttackMove extends AttackMove{
 	 public PawnAttackMove(final Board board, final Piece to_move, final int destination, final Piece attack ) {
@@ -211,7 +213,7 @@ public static class AttackMove extends Move{
  public static final class PawnEnPassantAttackMove extends PawnAttackMove{
 	 public PawnEnPassantAttackMove(final Board board, final Piece to_move, final int destination, final Piece attack ) {
 		 super(board,to_move,destination,attack);
-		 System.out.println("move made -> " + this.toString());
+		 //System.out.println("move made -> " + this.toString());
 	 }
 	 
 	 @Override
@@ -232,7 +234,7 @@ public static class AttackMove extends Move{
 	 
      @Override
      public Board execute() {
-    	 System.out.println("enPassant exe");
+    	// System.out.println("enPassant exe");
          final Board.Builder builder = new Builder();
          this.board.curPlayer().getActivePieces().stream().filter(piece -> !this.piece.equals(piece)).forEach(builder::setPiece);
          this.board.curPlayer().opponent().getActivePieces().stream().filter(piece -> !piece.equals(this.getAttackPiece())).forEach(builder::setPiece);
@@ -472,11 +474,11 @@ public static class MoveFactory {
 
 	 for(final Move move: board.getAllLegalMoves()) {
 		 if(move.getCur() == curPos && move.getDest() == destPos) {
-			 System.out.println("move created");
+			 //.out.println("move created");
 			 return move;
 		 }
 	 }
-	 System.out.println("Move not found");
+	// System.out.println("Move not found");
 	 return NULL_MOVE;
  }
 }

@@ -116,6 +116,7 @@ public final class Board {
 	
 	private static List<Tile>createBoard(final Builder builder){
 		final Tile[] tiles = new Tile[BoardUtils.NUM_TILES];
+		
 		for(int i = 0; i < BoardUtils.NUM_TILES;i++) {
 			tiles[i] = Tile.createTile(i, builder.boardConfig.get(i));
 		}
@@ -165,6 +166,25 @@ public final class Board {
         return builder.build();
 	}
 	
+
+	
+	public Board createCustomBoard(final Collection<Piece> wActivePieces, final Collection<Piece> bActivePieces, final Alliance turnMaker ) {
+		final Builder builder = new Builder();
+		
+		for(final Piece piece: wActivePieces) {
+			builder.setPiece(piece);
+		}
+		
+		for(final Piece piece: bActivePieces) {
+			builder.setPiece(piece);
+		}
+		
+		builder.setMoveMaker(turnMaker);
+		
+		return builder.build();
+		
+	}
+	
 	public static class Builder{
 		Map<Integer,Piece>boardConfig;
 		Alliance nextMove;
@@ -185,13 +205,32 @@ public final class Board {
 			return this;
 		}
 		
+		public Board createCustomBoard(final Collection<Piece> wActivePieces, final Collection<Piece> bActivePieces, final Alliance turnMaker ) {
+			
+			if(this.boardConfig != null) {
+				this.boardConfig.clear();
+			}
+			
+			for(final Piece piece: wActivePieces) {
+				this.boardConfig.put(piece.pos(), piece);
+			}
+			
+			for(final Piece piece: bActivePieces) {
+				this.boardConfig.put(piece.pos(), piece);
+			}
+			
+			this.setMoveMaker(turnMaker);
+			
+			return new Board(this);
+			
+		}
 		
 		public Board build() {
 			return new Board(this);
 		}
 
 		public void setEnPassantPawn(final Pawn pawn) {
-			System.out.println("setting enPassant Pawn");
+			//System.out.println("setting enPassant Pawn");
 			this.enPassantPawn = pawn;
 			
 		}
