@@ -1,8 +1,14 @@
 package com.chess.engine.peices;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 
 import com.chess.engine.board.Board;
 import com.chess.engine.board.BoardUtils;
@@ -31,7 +37,7 @@ public class Pawn extends Piece{
 
 	@Override
 	public Collection<Move> legalMoves(final Board board) {
-		final List<Move> legal_moves = new ArrayList<>();
+		List<Move> legal_moves = new ArrayList<>();
 	
 		for(final int offset: POSSIBLE_MOVES) {
 			final int candidate = this.position + (this.owner.direction() * offset);
@@ -48,18 +54,18 @@ public class Pawn extends Piece{
 					final Piece piece = board.getEnPassant();
 					final Move move = new PawnEnPassantAttackMove(board, this, candidate, piece);
 					legal_moves.add(new PawnEnPassantAttackMove(board, this, candidate, piece));
-					System.out.println("Added enPassant Attack from :" + BoardUtils.getPos(move.getCur()) + " to " + BoardUtils.getPos(move.getDest()));
+					//System.out.println("Added enPassant Attack from :" + BoardUtils.getPos(move.getCur()) + " to " + BoardUtils.getPos(move.getDest()));
 			}
 			//base attack check
 			if( (offset == 7 || offset == 9) && this.pawnAttackCheck(board,offset)) {
 					final Piece piece= board.getPiece(candidate);
 					legal_moves.add(new PawnAttackMove(board,this,candidate,piece));
-					System.out.println("Added pawn Attack :" + new PawnAttackMove(board, this, candidate, piece).toString());
+					//System.out.println("Added pawn Attack :" + new PawnAttackMove(board, this, candidate, piece).toString());
 			}
 			// regular move forward
 			if(offset == 8 && board.getPiece(candidate) == null) {
 				legal_moves.add(new PawnMove(board,this,candidate));		
-				System.out.println("Added pawn move :" + new PawnMove(board, this, candidate).toString());
+				//System.out.println("Added pawn move :" + new PawnMove(board, this, candidate).toString());
 			}
 		}
 		return ImmutableList.copyOf(legal_moves);
@@ -134,11 +140,29 @@ public class Pawn extends Piece{
 
 	@Override
 	public Pawn movePiece(final Move move) {
-		System.out.println("move Pawn");
+		//System.out.println("move Pawn");
 		return new Pawn(move.getDest(),move.getPiece().piece_alliance(),false);
 	}
 
 	public Piece promote() {
 		return  new Queen(this.position, this.owner, false);
+	}
+	
+	@Override
+	public ImageIcon getImg() {
+		   BufferedImage image = null; 
+			
+		   try {
+				if(this.owner.isBlack()) {
+					image = ImageIO.read(new File("C:\\Users\\andres\\eclipse-workspace\\NQueens\\art\\BP.png"));
+				}else {
+					image = ImageIO.read(new File("C:\\\\Users\\\\andres\\\\eclipse-workspace\\\\NQueens\\\\art\\\\WP.png"));
+				}
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			return new ImageIcon(image);
 	}
 }

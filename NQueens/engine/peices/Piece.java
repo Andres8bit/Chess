@@ -1,6 +1,9 @@
 package com.chess.engine.peices;
 
 import java.util.Collection;
+
+import javax.swing.ImageIcon;
+
 import com.chess.engine.board.Board;
 import com.chess.engine.board.Move;
 
@@ -68,6 +71,8 @@ public abstract class Piece {
 	public int getVal() {
 		return this.type.val();
 	}
+	
+	public abstract ImageIcon getImg();
 	public abstract Collection<Move> legalMoves(final Board board);
 	public abstract Piece movePiece(final Move move);
 

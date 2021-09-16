@@ -1,8 +1,14 @@
 package com.chess.engine.peices;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 
 import com.chess.engine.board.Board;
 import com.chess.engine.board.BoardUtils;
@@ -71,5 +77,23 @@ public  class Queen extends Piece {
 	@Override
 	public Queen movePiece(final Move move) {
 		return new Queen(move.getDest(),move.getPiece().piece_alliance(),false);
+	}
+	
+	@Override
+	public ImageIcon getImg() {
+		   BufferedImage image = null; 
+			
+		   try {
+				if(this.owner.isBlack()) {
+					image = ImageIO.read(new File("C:\\Users\\andres\\eclipse-workspace\\NQueens\\art\\BQ.png"));
+				}else {
+					image = ImageIO.read(new File("C:\\\\Users\\\\andres\\\\eclipse-workspace\\\\NQueens\\\\art\\\\WQ.png"));
+				}
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+			return new ImageIcon(image);
 	}
 }
