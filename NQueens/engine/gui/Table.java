@@ -32,6 +32,11 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -49,17 +54,23 @@ import com.chess.engine.peices.Alliance;
 import com.chess.engine.peices.Piece;
 import com.chess.engine.player.MoveStatus;
 import com.chess.engine.player.MoveTransition;
+import com.chess.gui.Table.TilePanel;
 import com.google.common.collect.Lists;
 
 import audio.AudioPlayer;
+import eventHandling.ImageSelection;
+import eventHandling.MouseInput;
 
 
 
 public class Table {
 	
 
+	private MouseInput mouse;
 	private Tile srcTile;
 	private Tile destTile;
+	private Tile testSrc;
+	private Tile testDest;
 	private Piece playerPiece;
 	private final MoveLog log;
 	private Board chessBoard;
@@ -74,8 +85,8 @@ public class Table {
 	private final JFrame gameFrame;
 	private static String pieceIconPath = "C:\\Users\\andres\\eclipse-workspace\\NQueens\\art\\";
 	private final static Dimension OUTER_FRAME_DIMENSION = new Dimension(800,800);
-	private final static Dimension BOARD_PANEL_DIMENSION = new Dimension(600,600);
-	private final static Dimension TILE_PANEL_DIMENSION = new Dimension(60,60);
+	private final static Dimension BOARD_PANEL_DIMENSION = new Dimension(100,100);
+	private final static Dimension TILE_PANEL_DIMENSION = new Dimension(10,10);
     private Color lightTileColor = Color.decode("#d9deda");
     		
     private Color darkTileColor = Color.decode("#63656a");
@@ -88,6 +99,8 @@ public class Table {
 		this.logPanel = new HistoryPanel();
 		this.boardPanel = new BoardPanel();
 		this.soundEffects = new AudioPlayer();
+		this.mouse = new MouseInput();
+		this.soundEffects.initialize();
 		this.log = new MoveLog();
 		final JMenuBar tableMenu = createMenuBar();
 		
@@ -228,11 +241,14 @@ public class Table {
 		BoardPanel(){
 			super(new GridLayout(8,8));
 			this.boardTiles = new ArrayList<>();
+			//PanelTransferHandler drag = new PanelTransferHandler();
 			
 			for(int i = 0; i < BoardUtils.NUM_TILES; i++) {
-				final TilePanel tilePanel = new TilePanel(this,i);
-				this.boardTiles.add(tilePanel);
+				TilePanel tilePanel = new TilePanel(this,i);
+	
+
 				add(tilePanel);
+				this.boardTiles.add(tilePanel);
 			}
 			
 			setPreferredSize(BOARD_PANEL_DIMENSION);
@@ -244,7 +260,9 @@ public class Table {
 			
 			for(final TilePanel tilePanel: boardDirection.traverse(boardTiles)){
 				tilePanel.drawTile(board);
+
 				add(tilePanel);
+				
 			}			
 			validate();
 			repaint();
@@ -311,25 +329,33 @@ public class Table {
     	public boolean removeMove(final Move move) {
     		return this.moves.remove(move);
     	}
-    	
     }
     
     
-	private class TilePanel extends JPanel{
+	public class TilePanel extends JPanel{
+		 public static final DataFlavor SUPPORTED_DATE_FLAVOR = DataFlavor.imageFlavor;
 		private final int tileId;
+		private TileLabel icon;
 		
 		
 
 		TilePanel(final BoardPanel board, final int tileId){
 			super(new GridBagLayout());
 			this.tileId = tileId;
+			this.setTransferHandler(new eventHandling.PanelTransferHandler());
 			setPreferredSize(TILE_PANEL_DIMENSION);
 			assignTileColor();
 			assignPieceIcon(chessBoard);
+			assignTileLable();
 			eventHandler();
 			validate();
 		}
 
+		
+		public JLabel getLabel() {
+			return icon;
+		}
+		
 		@Override
 		public String toString() {
 			if(playerPiece != null) {
@@ -341,9 +367,34 @@ public class Table {
 		public void drawTile(final Board board) {
 			assignTileColor();
 			assignPieceIcon(board);
+			assignTileLable();
 			validate();
 			highLightLegalMoves(board);
 			repaint();
+		}
+		
+		private void assignTileLable() {
+			if(BoardUtils.FIRST_ROW.get(tileId)) {
+			JLabel label = 	new JLabel(BoardUtils.getPos(tileId).substring(0,1));
+			label.setAlignmentY(BOTTOM_ALIGNMENT);
+			label.setAlignmentX(RIGHT_ALIGNMENT);
+			label.setSize( new Dimension(2,2));
+				this.add(label);
+			}
+			
+        if(BoardUtils.FIRST_COLUMN.get(tileId)) {
+			JLabel label = 	new JLabel(BoardUtils.getPos(tileId).substring(1));
+			label.setAlignmentY(BOTTOM_ALIGNMENT);
+			label.setAlignmentX(RIGHT_ALIGNMENT);
+			label.setSize( new Dimension(2,2));
+				this.add(label);
+        }
+			
+			
+		}
+
+		public int getTileId() {
+			return this.tileId;
 		}
 		
 		private void highLightLegalMoves(final Board board) {
@@ -390,24 +441,16 @@ public class Table {
 		private void assignPieceIcon(final Board board) {
 			this.removeAll();
 			if(board.getTile(this.tileId).isOccupied()) {
-				try {
-					final BufferedImage image = ImageIO.read(new File(pieceIconPath + board.getTile(this.tileId).getPiece().piece_alliance().toString().substring(0,1)
-							+ board.getTile(this.tileId).getPiece().toString() + ".PNG"));
-					this.add(new JLabel(new ImageIcon(image)));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				this.icon = new TileLabel(board.getTile(this.tileId).getPiece().getImg());
+			}else {
+				this.icon = new TileLabel(null);
 			}
+			this.add(icon);
 		}
 		
-		
-		private void playSound() {
-			
-			soundEffects.play("C:\\Users\\andres\\eclipse-workspace\\NQueens\\soundEffects\\place.wav");
-
-		}
 		
 		private void eventHandler() {
+
 			addMouseListener(new MouseListener() {
 
 				@Override
@@ -415,40 +458,46 @@ public class Table {
 					// if it is a humans turn allow events
 					if((chessBoard.curPlayer().getAlliance().isWhite() && !wAi) || (chessBoard.curPlayer().getAlliance().isBlack() && !bAi) ) {
 					if(SwingUtilities.isRightMouseButton(e)) {
+						mouse.reset();
 						srcTile = null;
 						destTile = null;
-						//playerPiece = null;
 					}else if(SwingUtilities.isLeftMouseButton(e)) {
+						mouse.mouseLeftClicked(e, tileId);
 						if(srcTile == null) {
+							if(mouse.getSrc() != -1) {
+								//System.out.println("src != -1");
+							}
 							srcTile = chessBoard.getTile(tileId);
 							playerPiece = srcTile.getPiece();
 							if(playerPiece == null) {
 								srcTile = null;
+								mouse.reset();
 							}else {
-									System.out.println("srcTile -> " + BoardUtils.getPos(tileId));
+								setBorder(BorderFactory.createBevelBorder(0, Color.green, Color.green));;
 								}
 							}else {
 								destTile = chessBoard.getTile(tileId);
-								System.out.println("Selected tile ->" + BoardUtils.getPos(destTile.getCoord()));
+								//System.out.println("Selected tile ->" + BoardUtils.getPos(destTile.getCoord()));
 								final Move move = MoveFactory.createMove(chessBoard, srcTile.getCoord(), tileId);
-								System.out.println("Move made by player: " + move.toString());
+								//System.out.println("Move made by player: " + move.toString());
 								final MoveTransition transition = chessBoard.curPlayer().makeMove(move);
 							
 								if(transition.getMoveStatus().isDone()) {
 									chessBoard = transition.getToBoard();
 									log.addMove(move);
+									soundEffects.processInput("place");
 								}
 							
 							srcTile = null;
 							destTile = null;
-							playerPiece = null;				
+							playerPiece = null;	
+							mouse.reset();
 						}
 						
 							SwingUtilities.invokeLater(() -> {
 								logPanel.redo(chessBoard,log);
 								capturesPanel.redo(log);
 								boardPanel.drawBoard(chessBoard);
-								playSound();	
 							});
 						}
 				 }else { // AI's Move
@@ -469,23 +518,38 @@ public class Table {
 
 				@Override
 				public void mouseReleased(final MouseEvent e) {
-					// TODO Auto-generated method stub
+					System.out.println("released mouse");
 					
 				}
 
 				@Override
 				public void mouseEntered(final MouseEvent e) {
-					// TODO Auto-generated method stub
+					setBorder(BorderFactory.createBevelBorder(0, Color.black, Color.black));
 					
 				}
 
 				@Override
 				public void mouseExited(final MouseEvent e) {
-					// TODO Auto-generated method stub
-					
+					setBorder( BorderFactory.createEmptyBorder());
 				}	
 				
 			});
 		}
+
+
+		public ImageIcon getPiece() {
+			if(chessBoard.getTile(tileId).isOccupied()) {
+				return chessBoard.getTile(tileId).getPiece().getImg();
+			}
+			return null;
+		}
+
+
+		public void setLabel(TileLabel label) {
+			this.icon = label;
+			this.drawTile(chessBoard);
+			
+		}
+		
 	}
 }
