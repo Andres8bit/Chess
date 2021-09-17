@@ -342,7 +342,7 @@ public class Table {
 		TilePanel(final BoardPanel board, final int tileId){
 			super(new GridBagLayout());
 			this.tileId = tileId;
-			this.setTransferHandler(new eventHandling.PanelTransferHandler());
+			this.setTransferHandler(new PanelTransferHandler());
 			setPreferredSize(TILE_PANEL_DIMENSION);
 			assignTileColor();
 			assignPieceIcon(chessBoard);
@@ -455,6 +455,7 @@ public class Table {
 
 				@Override
 				public void mouseClicked(final MouseEvent e) {
+					System.out.println("click");
 					// if it is a humans turn allow events
 					if((chessBoard.curPlayer().getAlliance().isWhite() && !wAi) || (chessBoard.curPlayer().getAlliance().isBlack() && !bAi) ) {
 					if(SwingUtilities.isRightMouseButton(e)) {
@@ -550,6 +551,232 @@ public class Table {
 			this.drawTile(chessBoard);
 			
 		}
+		
+		
+		
+		public class PanelTransferHandler extends TransferHandler {
+			private static final DataFlavor SUPPORTED_FLAVOR = DataFlavor.imageFlavor;
+			
+			public PanelTransferHandler() {
+				
+			}
+			
+			@Override
+			public boolean canImport(TransferHandler.TransferSupport info) {
+				if(!info.isDrop()) {
+					return false;
+				}
+				
+				
+				TilePanel temp = (TilePanel)info.getComponent();
+				int tempId = temp.getTileId();
+				if(testSrc == null && chessBoard.getTile(tempId).isOccupied()) {
+					if(chessBoard.getTile(tempId).getPiece().piece_alliance() == chessBoard.curPlayer().getAlliance()) {
+						testSrc = chessBoard.getTile(tempId);
+						System.out.println("set test src tile to : " + testSrc.getPiece().toString());
+					}
+				}else {
+					System.out.println("now we can check for a valid move is valid then on import make move");
+					
+					if(testDest!= null) {
+						System.out.println("test dest ->" + BoardUtils.getPos(testDest.getCoord()));
+						System.out.println("test src ->" + BoardUtils.getPos(testSrc.getCoord()));
+						final Move move = MoveFactory.createMove(chessBoard, testSrc.getCoord(), testDest.getCoord());
+						System.out.println("Move made by player: " + move.toString());
+						final MoveTransition transition = chessBoard.curPlayer().makeMove(move);
+						if(transition.getMoveStatus().isDone()) {
+							System.out.println("we can move/ drop");
+							return true;
+						}else {
+							System.out.println("we can not move/ drop");
+							return false;
+						}
+					}
+				
+
+					
+				}
+				System.out.println("Tile can import? " + BoardUtils.getPos(temp.getTileId()));
+
+				
+				if(!info.isDataFlavorSupported(DataFlavor.imageFlavor)) {
+					return false;
+				}
+				
+				System.out.println("reached last call to true");
+				return true;	
+			}
+			
+			
+
+			@Override
+			public boolean importData(TransferHandler.TransferSupport support) {
+				boolean success = false;
+				//TilePanel temp = (TilePanel)support.getComponent().getParent();
+				System.out.println("call to import data for JPanel");
+			
+				//System.out.println("panel tranfer data to :" + temp.getTileId());
+				TilePanel temp = (TilePanel)support.getComponent();
+				if(temp != null) {
+					testDest = chessBoard.getTile(temp.getTileId());
+					System.out.println("set testDest to " + BoardUtils.getPos(testDest.getCoord()));
+				}
+				
+				if(canImport(support)) {
+					try {
+						Transferable t = support.getTransferable();
+						//System.out.println("transferable: " + t.toString());
+						Object value = t.getTransferData(SUPPORTED_FLAVOR);
+					//	System.out.println("returned value:" + value.toString());
+						if(value instanceof ImageIcon  && testDest != null && testSrc != null) {
+							System.out.println("value is an image");
+							final Move move = MoveFactory.createMove(chessBoard, testSrc.getCoord(), testDest.getCoord());
+							System.out.println("Move made by player: " + move.toString());
+							final MoveTransition transition = chessBoard.curPlayer().makeMove(move);
+							if(transition.getMoveStatus().isDone()) {
+								System.out.println("making move");
+								chessBoard = transition.getToBoard();
+								log.addMove(move);
+								soundEffects.processInput("place");
+								testSrc = null;
+								testDest = null;
+							}
+							System.out.println("Tile importing: " + BoardUtils.getPos(temp.getTileId()));
+						//	System.out.println("Tile importing parent: " + BoardUtils.getPos(tempParent.getTileId()));
+							Component component = support.getComponent();
+							TileLabel label = new TileLabel((ImageIcon) value);
+							((TilePanel)component).add(label);
+							success = true;
+							
+							SwingUtilities.invokeLater(() -> {
+								logPanel.redo(chessBoard,log);
+								capturesPanel.redo(log);
+								boardPanel.drawBoard(chessBoard);
+							});
+						}
+
+					}catch(Exception e) {
+						e.printStackTrace();
+					}
+				}
+				
+				return success;
+			}
+			
+		}
+
+		
+		public class TileLabel extends JLabel{
+			private int tileId;
+			
+			
+
+			public TileLabel(final ImageIcon icon) {
+				if(icon != null) {
+					this.setIcon(icon);
+				}else {
+					this.setIcon(null);
+				}
+				
+				this.setTransferHandler(new ImageTransferHandler(icon));
+				
+			     this.addMouseMotionListener(new MouseAdapter() {
+			            @Override
+			            public void mouseDragged(MouseEvent e) {
+			                JLabel lbl = (JLabel) e.getSource();
+			                TransferHandler handle = lbl.getTransferHandler();
+			                handle.exportAsDrag(lbl, e, TransferHandler.MOVE);
+			            }
+			        });
+			}
+			
+			
+			public ImageIcon getImage() {
+				return (ImageIcon)this.getIcon();
+			}
+			
+			
+			public class ImageTransferHandler extends TransferHandler {
+				public static final DataFlavor SUPPORTED_FLAVOR = DataFlavor.imageFlavor;
+				private ImageIcon icon;
+				
+				public ImageTransferHandler(ImageIcon value) {
+					this.icon = value;
+				}
+				
+				public ImageIcon getIcon() {
+					return icon;
+				}
+
+				
+				@Override
+				public boolean canImport(TransferHandler.TransferSupport info) {
+					if(!info.isDrop()) {
+						return false;
+					}
+					
+					if(!info.isDataFlavorSupported(DataFlavor.imageFlavor)) {
+						return false;
+					}
+					return true;	
+				}
+				
+				@Override
+				public int getSourceActions(JComponent c) {
+					return DnDConstants.ACTION_MOVE;
+				}
+				
+				@Override
+				protected Transferable createTransferable(JComponent c) {
+					return new ImageSelection(getIcon());
+				}
+				
+				@Override
+				protected void exportDone(JComponent src, Transferable data, int action) {
+					super.exportDone(src, data, action);
+					
+					TilePanel temp = (TilePanel)src.getParent();
+                    if(temp != null) {
+					if(temp.getPiece() != null) {
+						((TileLabel)src).setVisible(false);
+						testSrc = chessBoard.getTile(temp.getTileId());
+						System.out.println(" set test Src tile to : " + BoardUtils.getPos(temp.getTileId()));
+						((TileLabel)src).getParent().remove((TileLabel)src);
+						testSrc = null;
+						testDest = null;
+					}
+                    }
+				}
+				
+				@Override
+				public boolean importData(TransferHandler.TransferSupport support) {
+					boolean success = false;
+					System.out.println("Call to import data");
+					TilePanel temp = (TilePanel)support.getComponent().getParent();
+					System.out.println("panel tranfer data to :" + temp.getTileId());
+					if(canImport(support)) {
+						try {
+							Transferable t = support.getTransferable();
+							Object value = t.getTransferData(SUPPORTED_FLAVOR);
+							if(value instanceof Image) {
+								Component component = support.getComponent();
+//								TilePanel temp = (TilePanel)support.getComponent().getParent();
+//								System.out.println("panel tranfer data to :" + temp.getTileId());
+								TileLabel label = new TileLabel((ImageIcon) value);
+								//((TilePanel)component).setLabel(label);
+							}
+							success = true;
+						}catch(Exception e) {
+							e.printStackTrace();
+						}
+					}
+					return success;
+				}
+			}
+
+
+		}
+
 		
 	}
 }
