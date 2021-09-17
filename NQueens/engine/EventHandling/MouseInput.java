@@ -1,10 +1,15 @@
 package eventHandling;
 
+import java.awt.Image;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+
+import javax.swing.ImageIcon;
+
+import com.chess.gui.Table.TilePanel;
 
 //wrapper class to help cut down code needed in classes that use MouseInput
 // Table would use this classs in each Tile, which would help it capture the state of the mouse
@@ -12,16 +17,20 @@ import java.awt.event.MouseWheelListener;
 public class MouseInput implements MouseListener, MouseMotionListener, MouseWheelListener {
 	private int srcPos = -1;
 	private int destPos = -1;
-	
+	private Image image;
 	
 	public void mouseLeftClicked(MouseEvent e, int tileId) {
+
 		if(tileId == -1 || tileId == 65) {
 			srcPos = -1;
 			destPos = -1;
+			image = null;
 		}else {
 			if(srcPos == -1) {
 				srcPos = tileId;
-			    System.out.println("src set");
+			    //this.image = ((TilePanel)e.getSource()).getPiece().getImage();
+				System.out.println("src set");
+			    
 			}else if(destPos == -1) {
 				destPos = tileId;
 				System.out.println("dest set");
