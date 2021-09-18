@@ -10,14 +10,18 @@ import com.chess.engine.peices.Alliance;
 import com.chess.engine.peices.King;
 import com.chess.engine.peices.Piece;
 import com.chess.engine.peices.Piece.PieceType;
+import com.chess.engine.player.AI.MiniMax;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-public abstract class Player {
+import eventHandling.BoardListener;
+
+public abstract class Player implements BoardListener {
 	protected final Board board;
 	protected final King playerKing;
 	protected final Collection<Move> legalMoves;
 	private final boolean checked;
+	private MiniMax brain;
 	
 	Player(final Board board, final Collection<Move> legalMoves,
 			final Collection<Move> opponentMoves){
@@ -25,6 +29,7 @@ public abstract class Player {
 		this.playerKing = establishKing();
 		this.legalMoves = ImmutableList.copyOf(Iterables.concat(legalMoves,calculateKingCastle(legalMoves,opponentMoves)));
 		this.checked = !Player.AttacksOnTile(this.playerKing.pos(),opponentMoves).isEmpty();
+		this.brain = new MiniMax(2,board,0,0);
 	}
 
 	public static Collection<Move> AttacksOnTile(int pos, Collection<Move> moves) {
@@ -100,6 +105,10 @@ public abstract class Player {
         return transitionedBoard.curPlayer().opponent().isInCheck() ?
                 new MoveTransition(this.board, this.board, move, MoveStatus.LEAVES_PLAYER_IN_CHECK) :
                 new MoveTransition(this.board, transitionedBoard, move, MoveStatus.DONE);
+	}
+	
+	public Move onOpponentMoveMade() {
+		 return brain.search(this.getAlliance());
 	}
 	
 	public abstract Collection<Piece> getActivePieces();
