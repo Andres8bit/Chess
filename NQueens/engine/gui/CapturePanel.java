@@ -56,7 +56,6 @@ public class CapturePanel extends JPanel{
 		
 		for(final Move move: log.getMoves()) {
 			if(move.isAttack()) {
-				System.out.println("is attack");
 				final Piece taken = move.getAttackPiece();
 				if(taken.piece_alliance().isWhite()) {
 					wTaken.add(taken);
