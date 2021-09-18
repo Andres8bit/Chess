@@ -10,6 +10,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.TransferHandler;
 
+import com.chess.engine.board.BoardUtils;
 import com.chess.gui.Table.TilePanel;
 import com.chess.gui.TileLabel;
 
@@ -24,6 +25,7 @@ public class ImageTransferHandler extends TransferHandler {
 	public ImageIcon getIcon() {
 		return icon;
 	}
+
 	
 	@Override
 	public boolean canImport(TransferHandler.TransferSupport info) {
@@ -50,9 +52,9 @@ public class ImageTransferHandler extends TransferHandler {
 	@Override
 	protected void exportDone(JComponent src, Transferable data, int action) {
 		super.exportDone(src, data, action);
-		((TileLabel)src).setVisible(true);
-		TilePanel temp = (TilePanel) ((TileLabel)src).getParent();
-		System.out.println("Src tile: " + temp.getTileId());
+		((TileLabel)src).setVisible(false);
+		TilePanel temp = (TilePanel)src.getParent();
+		//System.out.println(" export tile Src tile: " + BoardUtils.getPos(temp.getTileId()));
 		((TileLabel)src).getParent().remove((TileLabel)src);
 		
 	}
@@ -60,9 +62,9 @@ public class ImageTransferHandler extends TransferHandler {
 	@Override
 	public boolean importData(TransferHandler.TransferSupport support) {
 		boolean success = false;
-		System.out.println("Call to import data");
+		//System.out.println("Call to import data");
 		TilePanel temp = (TilePanel)support.getComponent().getParent();
-		System.out.println("panel tranfer data to :" + temp.getTileId());
+		//System.out.println("panel tranfer data to :" + temp.getTileId());
 		if(canImport(support)) {
 			try {
 				Transferable t = support.getTransferable();
