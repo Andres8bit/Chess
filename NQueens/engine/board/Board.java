@@ -14,7 +14,6 @@ import com.chess.engine.peices.Pawn;
 import com.chess.engine.peices.Piece;
 import com.chess.engine.peices.Queen;
 import com.chess.engine.peices.Rook;
-import com.chess.engine.player.Ai;
 import com.chess.engine.player.BPlayer;
 import com.chess.engine.player.Player;
 import com.chess.engine.board.Move.MoveFactory;
@@ -26,7 +25,6 @@ public final class Board {
 	private final List<Tile> board;
 	private final Collection<Piece>wPieces;
 	private final Collection<Piece>bPieces;
-	private Ai AiPlayer;
 	private final WPlayer wPlayer;
 	private final BPlayer bPlayer;
 	private final Player curPlayer;
@@ -45,7 +43,6 @@ public final class Board {
 		this.wPlayer = new WPlayer(this,wLegalMoves, bLegalMoves);
 		this.bPlayer = new BPlayer(this, wLegalMoves,bLegalMoves);
 		this.curPlayer = builder.nextMove.choosePlayer(this.wPlayer,this.bPlayer);
-        this.AiPlayer = null;
 		this.transitionMove = builder.transitionMove != null ? builder.transitionMove : MoveFactory.getNullMove();
 	}
 	
@@ -258,15 +255,7 @@ public final class Board {
 		return this.enPassantPawn;
 	}
 
-	
-	public Move runAi(final Alliance side) {
-     this.AiPlayer = new Ai(side,this);
-     //TODO set up board evaluator and minimax search classes to be called within AI class to return 
-     // best possible move so that table and make move and update GUI. 
-     
-     return this.AiPlayer.calculateBestMove();
-		
-	}
+
 
 
 }
