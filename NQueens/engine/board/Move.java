@@ -89,6 +89,7 @@ public abstract class Move {
 	  return null;
   }
 
+  
   public Board execute() {
 	  
       final Board.Builder builder = new Builder();
@@ -210,10 +211,9 @@ public static class AttackMove extends Move{
  }
 
  
- public static final class PawnEnPassantAttackMove extends PawnAttackMove{
+ public static final class PawnEnPassantAttackMove extends AttackMove{
 	 public PawnEnPassantAttackMove(final Board board, final Piece to_move, final int destination, final Piece attack ) {
 		 super(board,to_move,destination,attack);
-		 //System.out.println("move made -> " + this.toString());
 	 }
 	 
 	 @Override
@@ -234,15 +234,12 @@ public static class AttackMove extends Move{
 	 
      @Override
      public Board execute() {
-    	// System.out.println("enPassant exe");
          final Board.Builder builder = new Builder();
          this.board.curPlayer().getActivePieces().stream().filter(piece -> !this.piece.equals(piece)).forEach(builder::setPiece);
          this.board.curPlayer().opponent().getActivePieces().stream().filter(piece -> !piece.equals(this.getAttackPiece())).forEach(builder::setPiece);
          
          builder.setPiece(this.piece.movePiece(this));
-         
          builder.setMoveMaker(this.board.curPlayer().opponent().getAlliance());
-         
          builder.setMoveTransition(this);
          
          return builder.build();
