@@ -1,29 +1,5 @@
 package com.chess.gui;
 
-//import java.awt.BorderLayout;
-//import java.awt.Color;
-//import java.awt.Dimension;
-//import java.awt.GridBagLayout;
-//import java.awt.GridLayout;
-//import java.awt.event.ActionEvent;
-//import java.awt.event.ActionListener;
-//import java.awt.event.MouseEvent;
-//import java.awt.event.MouseListener;
-//import java.awt.image.BufferedImage;
-//import java.io.File;
-//import java.io.IOException;
-//import java.util.ArrayList;
-//import java.util.List;
-//import javax.swing.*;
-//import java.awt.event.*;
-//import javax.imageio.ImageIO;
-//import javax.swing.ImageIcon;
-//import javax.swing.JFrame;
-//import javax.swing.JLabel;
-//import javax.swing.JMenu;
-//import javax.swing.JMenuBar;
-//import javax.swing.JMenuItem;
-//import javax.swing.JPanel;
 import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -44,6 +20,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import com.chess.engine.board.Board;
 import com.chess.engine.board.BoardUtils;
@@ -54,23 +31,25 @@ import com.chess.engine.peices.Alliance;
 import com.chess.engine.peices.Piece;
 import com.chess.engine.player.MoveStatus;
 import com.chess.engine.player.MoveTransition;
+import com.chess.engine.player.AI.MiniMax;
 import com.chess.gui.Table.TilePanel;
 import com.google.common.collect.Lists;
 
 import audio.AudioPlayer;
+import eventHandling.BoardListener;
 import eventHandling.ImageSelection;
 import eventHandling.MouseInput;
 
 
 
-public class Table {
+
+public class Table{
 	
 
 	private MouseInput mouse;
 	private Tile srcTile;
 	private Tile destTile;
-	private Tile testSrc;
-	private Tile testDest;
+	private List<BoardListener> listeners;
 	private Piece playerPiece;
 	private final MoveLog log;
 	private Board chessBoard;
@@ -80,6 +59,8 @@ public class Table {
 	private boolean highLightLegalMoves;
 	private boolean bAi;
 	private boolean wAi;
+	private boolean moveMade = false;
+
 	private final AudioPlayer soundEffects;
 	private final BoardPanel boardPanel;
 	private final JFrame gameFrame;
@@ -92,6 +73,7 @@ public class Table {
     private Color darkTileColor = Color.decode("#63656a");
     
 	public Table() {
+		this.listeners = new ArrayList<BoardListener>();
 		this.gameFrame = new JFrame("Chess");
 		this.gameFrame.setLayout(new BorderLayout());
 		this.chessBoard = Board.createStandardBoard();
@@ -115,7 +97,19 @@ public class Table {
 		this.highLightLegalMoves = false;
 		this.bAi = false;
 		this.wAi = false;
+		this.addBoardListener(new AiListener());
 
+	}
+
+	private void addBoardListener(BoardListener listener) {
+	  this.listeners.add(listener);
+		
+	}
+	
+	private void notifyAllBoardListeners() {
+		for(final BoardListener listener: listeners) {
+			listener.moveMade();
+		}
 	}
 
 	private JMenuBar createMenuBar() {
@@ -210,6 +204,21 @@ public class Table {
 		
 	}
 
+	private void MakeMove(final Move move) {
+		final MoveTransition transition = chessBoard.curPlayer().makeMove(move);
+		
+		if(transition.getMoveStatus().isDone()) {
+			chessBoard = transition.getToBoard();
+			log.addMove(move);
+			soundEffects.processInput("place");
+			moveMade = true;
+			notifyAllBoardListeners();
+			boardPanel.drawBoard(chessBoard);
+			return;
+		}
+		moveMade = false;
+	}
+	
 	private JMenu createFileMenu() {
 		final JMenu fileMenu = new JMenu("File");
 		final JMenuItem openPGN = new JMenuItem("Load PGN File");
@@ -241,7 +250,6 @@ public class Table {
 		BoardPanel(){
 			super(new GridLayout(8,8));
 			this.boardTiles = new ArrayList<>();
-			//PanelTransferHandler drag = new PanelTransferHandler();
 			
 			for(int i = 0; i < BoardUtils.NUM_TILES; i++) {
 				TilePanel tilePanel = new TilePanel(this,i);
@@ -396,17 +404,28 @@ public class Table {
 		public int getTileId() {
 			return this.tileId;
 		}
+		public void redraw() {
+			SwingUtilities.invokeLater(() -> {
+				logPanel.redo(chessBoard,log);
+				capturesPanel.redo(log);
+				boardPanel.drawBoard(chessBoard);
+				soundEffects.processInput("stop");
+				highLightLegalMoves(chessBoard);
+			});
+		}
 		
 		private void highLightLegalMoves(final Board board) {
 			if(highLightLegalMoves) {
 				for(final Move move: pieceLegalMoves(board)) {
 					if(move.getDest() == this.tileId) {
-						try {
-							add(new JLabel(new ImageIcon(ImageIO.read(new File("C:\\Users\\andres\\eclipse-workspace\\NQueens\\art\\green_dot.png")))));
-						}catch(Exception e) {
-							e.printStackTrace();
-						}
+						if(move.isAttack()) {
+						setBorder(BorderFactory.createBevelBorder(0, Color.RED, Color.RED));
 					}
+					else {
+						setBorder(BorderFactory.createBevelBorder(0,Color.GREEN,Color.GREEN));
+
+					}
+				}
 				}
 			}
 		}
@@ -441,9 +460,9 @@ public class Table {
 		private void assignPieceIcon(final Board board) {
 			this.removeAll();
 			if(board.getTile(this.tileId).isOccupied()) {
-				this.icon = new TileLabel(board.getTile(this.tileId).getPiece().getImg());
+				this.icon = new TileLabel(board.getTile(this.tileId).getPiece().getImg(),tileId);
 			}else {
-				this.icon = new TileLabel(null);
+				this.icon = new TileLabel(null,tileId);
 			}
 			this.add(icon);
 		}
@@ -455,9 +474,7 @@ public class Table {
 
 				@Override
 				public void mouseClicked(final MouseEvent e) {
-					System.out.println("click");
 					// if it is a humans turn allow events
-					if((chessBoard.curPlayer().getAlliance().isWhite() && !wAi) || (chessBoard.curPlayer().getAlliance().isBlack() && !bAi) ) {
 					if(SwingUtilities.isRightMouseButton(e)) {
 						mouse.reset();
 						srcTile = null;
@@ -466,49 +483,25 @@ public class Table {
 						mouse.mouseLeftClicked(e, tileId);
 						if(srcTile == null) {
 							if(mouse.getSrc() != -1) {
-								//System.out.println("src != -1");
+		
 							}
 							srcTile = chessBoard.getTile(tileId);
 							playerPiece = srcTile.getPiece();
 							if(playerPiece == null) {
 								srcTile = null;
 								mouse.reset();
+							}
 							}else {
-								setBorder(BorderFactory.createBevelBorder(0, Color.green, Color.green));;
-								}
-							}else {
-								destTile = chessBoard.getTile(tileId);
-								//System.out.println("Selected tile ->" + BoardUtils.getPos(destTile.getCoord()));
-								final Move move = MoveFactory.createMove(chessBoard, srcTile.getCoord(), tileId);
-								//System.out.println("Move made by player: " + move.toString());
-								final MoveTransition transition = chessBoard.curPlayer().makeMove(move);
-							
-								if(transition.getMoveStatus().isDone()) {
-									chessBoard = transition.getToBoard();
-									log.addMove(move);
-									soundEffects.processInput("place");
-								}
-							
+							destTile = chessBoard.getTile(tileId);
+							final Move move = MoveFactory.createMove(chessBoard, srcTile.getCoord(), destTile.getCoord());
+							MakeMove(move);
 							srcTile = null;
 							destTile = null;
 							playerPiece = null;	
 							mouse.reset();
 						}
-						
-							SwingUtilities.invokeLater(() -> {
-								logPanel.redo(chessBoard,log);
-								capturesPanel.redo(log);
-								boardPanel.drawBoard(chessBoard);
-							});
-						}
-				 }else { // AI's Move
-					 if(bAi && chessBoard.curPlayer().getAlliance().isBlack()) {
-						 chessBoard.runAi(Alliance.BLACK);
-					 }else if(wAi && chessBoard.curPlayer().getAlliance().isWhite()) {
-						 final Move aiMove = chessBoard.runAi(Alliance.WHITE);
-					 }
-
-				 }
+						redraw();
+					}
 				}
 
 				@Override
@@ -519,20 +512,23 @@ public class Table {
 
 				@Override
 				public void mouseReleased(final MouseEvent e) {
-					System.out.println("released mouse");
 					
 				}
 
 				@Override
 				public void mouseEntered(final MouseEvent e) {
-					setBorder(BorderFactory.createBevelBorder(0, Color.black, Color.black));
+			        if(!highLightLegalMoves) {
+			        	setBorder(BorderFactory.createBevelBorder(0, Color.black, Color.black));
+			        }
 					
 				}
 
 				@Override
 				public void mouseExited(final MouseEvent e) {
-					setBorder( BorderFactory.createEmptyBorder());
-				}	
+					if(!highLightLegalMoves) {
+						setBorder( BorderFactory.createEmptyBorder());
+					}
+				}
 				
 			});
 		}
@@ -563,32 +559,33 @@ public class Table {
 			
 			@Override
 			public boolean canImport(TransferHandler.TransferSupport info) {
-				if(!info.isDrop()) {
+				if(!info.isDrop() || !info.isDataFlavorSupported(SUPPORTED_FLAVOR)) {
 					return false;
 				}
 				
 				
 				TilePanel temp = (TilePanel)info.getComponent();
 				int tempId = temp.getTileId();
-				if(testSrc == null && chessBoard.getTile(tempId).isOccupied()) {
+				
+				if(chessBoard.getTile(tempId).isOccupied() && chessBoard.getTile(tempId).getPiece().piece_alliance() != chessBoard.curPlayer().getAlliance()) {
+					return false;
+				}
+				if(srcTile == null && chessBoard.getTile(tempId).isOccupied()) {
 					if(chessBoard.getTile(tempId).getPiece().piece_alliance() == chessBoard.curPlayer().getAlliance()) {
-						testSrc = chessBoard.getTile(tempId);
-						System.out.println("set test src tile to : " + testSrc.getPiece().toString());
+						srcTile = chessBoard.getTile(tempId);
+						if(srcTile.getPiece().piece_alliance() != chessBoard.curPlayer().getAlliance()) {
+							return false;
+						}
 					}
 				}else {
-					System.out.println("now we can check for a valid move is valid then on import make move");
 					
-					if(testDest!= null) {
-						System.out.println("test dest ->" + BoardUtils.getPos(testDest.getCoord()));
-						System.out.println("test src ->" + BoardUtils.getPos(testSrc.getCoord()));
-						final Move move = MoveFactory.createMove(chessBoard, testSrc.getCoord(), testDest.getCoord());
-						System.out.println("Move made by player: " + move.toString());
+					if(destTile!= null) {
+
+						final Move move = MoveFactory.createMove(chessBoard, srcTile.getCoord(), destTile.getCoord());
 						final MoveTransition transition = chessBoard.curPlayer().makeMove(move);
 						if(transition.getMoveStatus().isDone()) {
-							System.out.println("we can move/ drop");
 							return true;
 						}else {
-							System.out.println("we can not move/ drop");
 							return false;
 						}
 					}
@@ -596,63 +593,29 @@ public class Table {
 
 					
 				}
-				System.out.println("Tile can import? " + BoardUtils.getPos(temp.getTileId()));
-
 				
-				if(!info.isDataFlavorSupported(DataFlavor.imageFlavor)) {
-					return false;
-				}
-				
-				System.out.println("reached last call to true");
 				return true;	
 			}
 			
-			
-
 			@Override
 			public boolean importData(TransferHandler.TransferSupport support) {
 				boolean success = false;
-				//TilePanel temp = (TilePanel)support.getComponent().getParent();
-				System.out.println("call to import data for JPanel");
-			
-				//System.out.println("panel tranfer data to :" + temp.getTileId());
 				TilePanel temp = (TilePanel)support.getComponent();
 				if(temp != null) {
-					testDest = chessBoard.getTile(temp.getTileId());
-					System.out.println("set testDest to " + BoardUtils.getPos(testDest.getCoord()));
+					destTile = chessBoard.getTile(temp.getTileId());
 				}
 				
 				if(canImport(support)) {
 					try {
 						Transferable t = support.getTransferable();
-						//System.out.println("transferable: " + t.toString());
 						Object value = t.getTransferData(SUPPORTED_FLAVOR);
-					//	System.out.println("returned value:" + value.toString());
-						if(value instanceof ImageIcon  && testDest != null && testSrc != null) {
-							System.out.println("value is an image");
-							final Move move = MoveFactory.createMove(chessBoard, testSrc.getCoord(), testDest.getCoord());
-							System.out.println("Move made by player: " + move.toString());
-							final MoveTransition transition = chessBoard.curPlayer().makeMove(move);
-							if(transition.getMoveStatus().isDone()) {
-								System.out.println("making move");
-								chessBoard = transition.getToBoard();
-								log.addMove(move);
-								soundEffects.processInput("place");
-								testSrc = null;
-								testDest = null;
-							}
-							System.out.println("Tile importing: " + BoardUtils.getPos(temp.getTileId()));
-						//	System.out.println("Tile importing parent: " + BoardUtils.getPos(tempParent.getTileId()));
-							Component component = support.getComponent();
-							TileLabel label = new TileLabel((ImageIcon) value);
-							((TilePanel)component).add(label);
+						if(value instanceof ImageIcon  && destTile != null && srcTile != null) {
+							final Move move = MoveFactory.createMove(chessBoard, srcTile.getCoord(), destTile.getCoord());
+							MakeMove(move);
+							srcTile = null;
+							destTile = null;
 							success = true;
-							
-							SwingUtilities.invokeLater(() -> {
-								logPanel.redo(chessBoard,log);
-								capturesPanel.redo(log);
-								boardPanel.drawBoard(chessBoard);
-							});
+							redraw();
 						}
 
 					}catch(Exception e) {
@@ -671,9 +634,10 @@ public class Table {
 			
 			
 
-			public TileLabel(final ImageIcon icon) {
+			public TileLabel(final ImageIcon icon,final int pos) {
 				if(icon != null) {
 					this.setIcon(icon);
+					this.tileId = pos;
 				}else {
 					this.setIcon(null);
 				}
@@ -688,6 +652,8 @@ public class Table {
 			                handle.exportAsDrag(lbl, e, TransferHandler.MOVE);
 			            }
 			        });
+			     
+			     eventHandler();
 			}
 			
 			
@@ -695,6 +661,67 @@ public class Table {
 				return (ImageIcon)this.getIcon();
 			}
 			
+			
+			private void eventHandler() {
+
+				addMouseListener(new MouseListener() {
+
+					@Override
+					public void mouseClicked(final MouseEvent e) {
+						// if it is a humans turn allow events
+						if(SwingUtilities.isRightMouseButton(e)) {
+							mouse.reset();
+							srcTile = null;
+							destTile = null;
+						}else if(SwingUtilities.isLeftMouseButton(e)) {
+							mouse.mouseLeftClicked(e, tileId);
+							if(srcTile == null) {
+								if(mouse.getSrc() != -1) {
+			
+								}
+								srcTile = chessBoard.getTile(tileId);
+								playerPiece = srcTile.getPiece();
+								if(playerPiece == null) {
+									srcTile = null;
+									mouse.reset();
+								}
+								}else {
+									System.out.println("src is set to :" + srcTile.toString());
+								destTile = chessBoard.getTile(tileId);
+								final Move move = MoveFactory.createMove(chessBoard, srcTile.getCoord(), destTile.getCoord());
+								MakeMove(move);
+								srcTile = null;
+								destTile = null;
+								playerPiece = null;	
+								mouse.reset();
+							}
+							redraw();
+						}
+					}
+
+					@Override
+					public void mousePressed(final MouseEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+
+					@Override
+					public void mouseReleased(final MouseEvent e) {
+						
+					}
+
+					@Override
+					public void mouseEntered(final MouseEvent e) {
+						
+					}
+
+					@Override
+					public void mouseExited(final MouseEvent e) {
+				
+					}	
+					
+				});
+			}
 			
 			public class ImageTransferHandler extends TransferHandler {
 				public static final DataFlavor SUPPORTED_FLAVOR = DataFlavor.imageFlavor;
@@ -718,6 +745,32 @@ public class Table {
 					if(!info.isDataFlavorSupported(DataFlavor.imageFlavor)) {
 						return false;
 					}
+					
+					
+					TileLabel temp = (TileLabel)info.getComponent();
+					
+					int tempId = temp.getTileId();
+					
+					if(srcTile == null && chessBoard.getTile(tempId).isOccupied()) {
+						if(chessBoard.getTile(tempId).getPiece().piece_alliance() == chessBoard.curPlayer().getAlliance()) {
+							srcTile = chessBoard.getTile(tempId);
+							if(srcTile.getPiece().piece_alliance() != chessBoard.curPlayer().getAlliance()) {
+								return false;
+							}
+						}
+					}else {
+						if(destTile!= null) {
+							final Move move = MoveFactory.createMove(chessBoard, srcTile.getCoord(), destTile.getCoord());
+							final MoveTransition transition = chessBoard.curPlayer().makeMove(move);
+							if(transition.getMoveStatus().isDone()) {
+								return true;
+							}else {
+								return false;
+							}
+						}
+						
+					}
+					
 					return true;	
 				}
 				
@@ -736,36 +789,46 @@ public class Table {
 					super.exportDone(src, data, action);
 					
 					TilePanel temp = (TilePanel)src.getParent();
-                    if(temp != null) {
+                    if(temp != null && moveMade) {
 					if(temp.getPiece() != null) {
 						((TileLabel)src).setVisible(false);
-						testSrc = chessBoard.getTile(temp.getTileId());
-						System.out.println(" set test Src tile to : " + BoardUtils.getPos(temp.getTileId()));
+						srcTile = chessBoard.getTile(temp.getTileId());
 						((TileLabel)src).getParent().remove((TileLabel)src);
-						testSrc = null;
-						testDest = null;
+						srcTile = null;
+						destTile = null;
 					}
                     }
+                    SwingUtilities.invokeLater(() -> {
+						logPanel.redo(chessBoard,log);
+						capturesPanel.redo(log);
+						boardPanel.drawBoard(chessBoard);
+					});
 				}
 				
 				@Override
 				public boolean importData(TransferHandler.TransferSupport support) {
 					boolean success = false;
-					System.out.println("Call to import data");
 					TilePanel temp = (TilePanel)support.getComponent().getParent();
-					System.out.println("panel tranfer data to :" + temp.getTileId());
+					if(temp != null) {
+							destTile = chessBoard.getTile(temp.getTileId());
+					}
 					if(canImport(support)) {
 						try {
 							Transferable t = support.getTransferable();
 							Object value = t.getTransferData(SUPPORTED_FLAVOR);
-							if(value instanceof Image) {
-								Component component = support.getComponent();
-//								TilePanel temp = (TilePanel)support.getComponent().getParent();
-//								System.out.println("panel tranfer data to :" + temp.getTileId());
-								TileLabel label = new TileLabel((ImageIcon) value);
-								//((TilePanel)component).setLabel(label);
+							if(value instanceof ImageIcon  && destTile != null && srcTile != null) {
+								final Move move = MoveFactory.createMove(chessBoard, srcTile.getCoord(), destTile.getCoord());
+								MakeMove(move);
+									moveMade = false;
+									srcTile = null;
+									destTile = null;
+								
+								success = true;
+								redraw();
+
+							}else {
+								destTile = null;
 							}
-							success = true;
 						}catch(Exception e) {
 							e.printStackTrace();
 						}
@@ -774,9 +837,49 @@ public class Table {
 				}
 			}
 
+			public int getTileId() {
+				return this.tileId;
+			}
 
 		}
-
 		
+	}
+	
+	public class AiListener implements BoardListener{
+
+		@Override
+		public void moveMade() {
+			if(wAi && chessBoard.curPlayer().getAlliance().isWhite()) {
+				final Brain brain = new Brain();
+				brain.execute();
+			}else if(bAi && chessBoard.curPlayer().getAlliance().isBlack()) {
+				final Brain brain = new Brain();
+				brain.execute();
+				
+			}
+		}
+	}
+	
+	public class Brain extends SwingWorker<Move,String> {
+
+		@Override
+		protected Move doInBackground() throws Exception {
+			System.out.println("Call to do in background");
+			final MiniMax strategy = new MiniMax(4,chessBoard,0,0);
+			
+			return strategy.excecute(chessBoard);
+		}
+		
+		@Override
+		protected void done() {
+			System.out.println("Call to do done");
+			try {
+				final Move best = get();
+				System.out.println("making move");
+				MakeMove(best);
+			} catch (Exception e) {
+				e.printStackTrace();
+			} 
+		}
 	}
 }
