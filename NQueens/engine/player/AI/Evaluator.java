@@ -55,11 +55,18 @@ public final class Evaluator {
 		
 		for(final Move move: moves) {
 			if(move.isAttack()) {
-				sum += move.getAttackPiece().getVal();
+				sum = sum * move.getAttackPiece().getVal();
 			}else {
 				sum += 100;
 			}
 		}
+		return sum;
+	}
+	
+	private static long positioningScore(final Board board, final Alliance side) {
+		long sum = 0;
+		
+		
 		return sum;
 	}
 }
