@@ -14,7 +14,7 @@ public final class Evaluator {
   
 	public static long evaluate(final Board board,final Alliance side) {
 
-	  return  side.direction() *  pieceScore(board,side) + legalMovesScore(board,side);
+	  return   (side.direction() *  pieceScore(board,side) + legalMovesScore(board,side));
   }
 	
 	public static Move getBestMove(final Board board, final Alliance side) {
@@ -55,9 +55,9 @@ public final class Evaluator {
 		
 		for(final Move move: moves) {
 			if(move.isAttack()) {
-				sum = sum * move.getAttackPiece().getVal();
+				sum +=  move.getAttackPiece().getVal();
 			}else {
-				sum += 100;
+				sum += move.getPiece().getVal() ;
 			}
 		}
 		return sum;
