@@ -212,8 +212,8 @@ public class Table{
 			log.addMove(move);
 			soundEffects.processInput("place");
 			moveMade = true;
-			notifyAllBoardListeners();
 			boardPanel.drawBoard(chessBoard);
+			notifyAllBoardListeners();
 			return;
 		}
 		moveMade = false;
@@ -243,6 +243,18 @@ public class Table{
 		fileMenu.add(exitItem);
 		return fileMenu;
 	}
+	
+	
+	public void redraw() {
+		SwingUtilities.invokeLater(() -> {
+			logPanel.redo(chessBoard,log);
+			capturesPanel.redo(log);
+			boardPanel.drawBoard(chessBoard);
+			soundEffects.processInput("stop");
+			
+		});
+	}
+	
 	
 	private class BoardPanel extends JPanel{
 		final List<TilePanel> boardTiles;
@@ -404,16 +416,7 @@ public class Table{
 		public int getTileId() {
 			return this.tileId;
 		}
-		public void redraw() {
-			SwingUtilities.invokeLater(() -> {
-				logPanel.redo(chessBoard,log);
-				capturesPanel.redo(log);
-				boardPanel.drawBoard(chessBoard);
-				soundEffects.processInput("stop");
-				highLightLegalMoves(chessBoard);
-			});
-		}
-		
+
 		private void highLightLegalMoves(final Board board) {
 			if(highLightLegalMoves) {
 				for(final Move move: pieceLegalMoves(board)) {
@@ -712,12 +715,12 @@ public class Table{
 
 					@Override
 					public void mouseEntered(final MouseEvent e) {
-						
+			        	setBorder(BorderFactory.createBevelBorder(0, Color.darkGray, Color.darkGray));
 					}
 
 					@Override
 					public void mouseExited(final MouseEvent e) {
-				
+						setBorder( BorderFactory.createEmptyBorder());
 					}	
 					
 				});
@@ -864,7 +867,7 @@ public class Table{
 
 		@Override
 		protected Move doInBackground() throws Exception {
-			System.out.println("Call to do in background");
+			System.out.println("Thinking...");
 			final MiniMax strategy = new MiniMax(4,chessBoard,0,0);
 			
 			return strategy.excecute(chessBoard);
@@ -872,11 +875,11 @@ public class Table{
 		
 		@Override
 		protected void done() {
-			System.out.println("Call to do done");
 			try {
 				final Move best = get();
-				System.out.println("making move");
+				System.out.println("Know Move");
 				MakeMove(best);
+				redraw();
 			} catch (Exception e) {
 				e.printStackTrace();
 			} 
