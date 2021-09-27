@@ -69,4 +69,6 @@ public class WPlayer extends Player {
 		
 		return ImmutableList.copyOf(kingCastles);
 	}
+
+
 }

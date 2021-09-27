@@ -16,12 +16,11 @@ import com.google.common.collect.Iterables;
 
 import eventHandling.BoardListener;
 
-public abstract class Player implements BoardListener {
+public abstract class Player {
 	protected final Board board;
 	protected final King playerKing;
 	protected final Collection<Move> legalMoves;
 	private final boolean checked;
-	private MiniMax brain;
 	
 	Player(final Board board, final Collection<Move> legalMoves,
 			final Collection<Move> opponentMoves){
@@ -29,9 +28,10 @@ public abstract class Player implements BoardListener {
 		this.playerKing = establishKing();
 		this.legalMoves = ImmutableList.copyOf(Iterables.concat(legalMoves,calculateKingCastle(legalMoves,opponentMoves)));
 		this.checked = !Player.AttacksOnTile(this.playerKing.pos(),opponentMoves).isEmpty();
-		this.brain = new MiniMax(2,board,0,0);
 	}
 
+
+	
 	public static Collection<Move> AttacksOnTile(int pos, Collection<Move> moves) {
 		final List<Move> attacks = new ArrayList<>();
 		for(final Move move: moves) {
@@ -91,13 +91,9 @@ public abstract class Player implements BoardListener {
 	}
 	
 	public MoveTransition makeMove(final Move move) {
-		
-		for(final Move curMove: this.legalMoves) {
-		//	System.out.println("looking for: " + move.toString());
-			//System.out.println("current move in list of legal moves: " + curMove.toString());
-		}
+		//System.out.println("call to make move with: " + move.toString());
         if (!this.legalMoves.contains(move)) {
-        	//System.out.println("illegal move");
+        //	System.out.println("move not found, returning illegal move");
             return new MoveTransition(this.board, this.board, move, MoveStatus.ILLEGAL_MOVE);
         }
         
@@ -107,9 +103,6 @@ public abstract class Player implements BoardListener {
                 new MoveTransition(this.board, transitionedBoard, move, MoveStatus.DONE);
 	}
 	
-	public Move onOpponentMoveMade() {
-		 return brain.search(this.getAlliance());
-	}
 	
 	public abstract Collection<Piece> getActivePieces();
 	public abstract Alliance getAlliance();
