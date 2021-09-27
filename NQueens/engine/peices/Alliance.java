@@ -11,7 +11,7 @@ BLACK{
 	
 	@Override
 	public String toString() {
-		return "black";
+		return "b";
 	}
 	
 	@Override
@@ -48,7 +48,7 @@ WHITE{
 
 	@Override
 	public String toString() {
-		return "white";
+		return "w";
 	}
 	
 	@Override

@@ -30,7 +30,7 @@ public  class Queen extends Piece {
 
 	@Override
 	public String toString() {
-		return Piece.PieceType.QUEEN.toString();
+		return owner.isWhite()? Piece.PieceType.QUEEN.toString().toUpperCase() : Piece.PieceType.QUEEN.toString();
 	}
 	
 	@Override

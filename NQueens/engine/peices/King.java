@@ -32,7 +32,7 @@ public class King extends Piece{
 
 	@Override
 	public String toString() {
-		return Piece.PieceType.KING.toString();
+		return owner.isWhite()? PieceType.KING.toString().toUpperCase(): PieceType.KING.toString();
 	}
 	
 	@Override

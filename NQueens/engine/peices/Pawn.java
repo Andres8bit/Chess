@@ -15,6 +15,7 @@ import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
 import com.chess.engine.board.Move.PawnAttackMove;
 import com.chess.engine.board.Move.PawnEnPassantAttackMove;
+import com.chess.engine.board.Move.PawnJumpMove;
 import com.chess.engine.board.Move.PawnMove;
 import com.google.common.collect.ImmutableList;
 
@@ -31,7 +32,7 @@ public class Pawn extends Piece{
 	
 	@Override
 	public String toString() {
-		return Piece.PieceType.PAWN.toString();// + owner.toString();
+		return owner.isWhite() ? PieceType.PAWN.toString().toUpperCase(): PieceType.PAWN.toString();
 	}
 	
 
@@ -47,14 +48,15 @@ public class Pawn extends Piece{
 			}
 			//first move of pawn  && check for space to jump
 			if(this.isFirstMove() && this.pawnJumpCheck(board,offset)) {
-			   		legal_moves.add(new PawnMove(board,this,candidate));
+			   		legal_moves.add(new  PawnJumpMove(board,this,candidate));
 			}
 			//possible enPassant opening
 			if(board.getEnPassant() != null && this.enPassantAttackCheck(board,offset)) {
 					final Piece piece = board.getEnPassant();
 					final Move move = new PawnEnPassantAttackMove(board, this, candidate, piece);
+					System.out.println(move.toString());
 					legal_moves.add(new PawnEnPassantAttackMove(board, this, candidate, piece));
-					//System.out.println("Added enPassant Attack from :" + BoardUtils.getPos(move.getCur()) + " to " + BoardUtils.getPos(move.getDest()));
+					System.out.println("Added enPassant Attack from :" + BoardUtils.getPos(move.getCur()) + " to " + BoardUtils.getPos(move.getDest()));
 			}
 			//base attack check
 			if( (offset == 7 || offset == 9) && this.pawnAttackCheck(board,offset)) {

@@ -32,7 +32,8 @@ public class Bishop extends Piece{
 
 	@Override
 	public String toString() {
-		return Piece.PieceType.BISHOP.toString();
+		return owner.isWhite()? 
+			PieceType.BISHOP.toString().toUpperCase(): PieceType.BISHOP.toString();
 	}
 	
 	@Override

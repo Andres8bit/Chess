@@ -77,12 +77,12 @@ public abstract class Piece {
 	public abstract Piece movePiece(final Move move);
 
 	public enum PieceType{
-		PAWN("P", 100),
-		KNIGHT("N",300),
-		BISHOP("B",300),
-		ROOK("R",500),
-		QUEEN("Q",900),
-		KING("K",1000);
+		PAWN("p", 100),
+		KNIGHT("n",300),
+		BISHOP("b",300),
+		ROOK("r",500),
+		QUEEN("q",900),
+		KING("k",1000);
 		
 		private String pieceName;
 		private int val;
@@ -97,7 +97,7 @@ public abstract class Piece {
 
 		@Override
 		public String toString() {
-			return this.pieceName;
+			return  this.pieceName;
 		}
 	}
 }

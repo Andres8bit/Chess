@@ -31,7 +31,7 @@ public class Rook extends Piece{
 
 	@Override
 	public String toString() {
-		return Piece.PieceType.ROOK.toString();
+		return owner.isWhite()? PieceType.ROOK.toString().toUpperCase(): PieceType.ROOK.toString();
 	}
 	
 	@Override

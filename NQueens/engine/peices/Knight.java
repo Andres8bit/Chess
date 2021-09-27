@@ -30,7 +30,7 @@ public class Knight extends Piece{
 	
 	@Override
 	public String toString() {
-		return Piece.PieceType.KNIGHT.toString();
+		return owner.isWhite()? Piece.PieceType.KNIGHT.toString().toUpperCase() : Piece.PieceType.KNIGHT.toString();
 	}
 	
 	@Override
