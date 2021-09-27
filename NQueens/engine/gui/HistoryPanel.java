@@ -18,8 +18,8 @@ import com.chess.gui.Table.MoveLog;
 
 public class HistoryPanel extends JPanel{
 	
-	private final DataModel model;
-	private final JScrollPane scrollPane;
+	private DataModel model;
+	private JScrollPane scrollPane;
 	private static final Dimension DIMS =  new Dimension(100,100);
 	private static final Color PANEL_COLOR = Color.decode("#d9deda");
 	
@@ -35,6 +35,10 @@ public class HistoryPanel extends JPanel{
 	    this.setBackground(PANEL_COLOR);
 		this.add(scrollPane,BorderLayout.CENTER);
 		this.setVisible(true);
+	}
+	
+	void clear() {
+		this.model.clear();
 	}
 	
 	void redo(final Board board, final MoveLog log) {

@@ -15,6 +15,8 @@ import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -23,10 +25,12 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import com.chess.engine.board.Board;
+import com.chess.engine.board.Board.Builder;
 import com.chess.engine.board.BoardUtils;
 import com.chess.engine.board.Move;
 import com.chess.engine.board.Tile;
 import com.chess.engine.board.Move.MoveFactory;
+import com.chess.engine.board.Move.PawnMove;
 import com.chess.engine.peices.Alliance;
 import com.chess.engine.peices.Piece;
 import com.chess.engine.player.MoveStatus;
@@ -51,7 +55,9 @@ public class Table{
 	private Tile destTile;
 	private List<BoardListener> listeners;
 	private Piece playerPiece;
-	private final MoveLog log;
+	private MoveLog log;
+
+	
 	private Board chessBoard;
 	private BoardDirection boardDirection;
 	private CapturePanel capturesPanel;
@@ -101,6 +107,91 @@ public class Table{
 
 	}
 
+
+	private void CheckMateDialogMsg(final Alliance side) {
+			final JOptionPane msg = new JOptionPane(
+					"CheckMate: "   + 
+			        side.toString() + 
+			        "\n"            + 
+			        "Reset Game?",
+			        JOptionPane.QUESTION_MESSAGE,
+			        JOptionPane.YES_NO_OPTION);
+			
+			final JDialog dialog = new JDialog(gameFrame, "Game Over: CheckMate",true);
+			dialog.setContentPane(msg);
+			msg.addPropertyChangeListener(new PropertyChangeListener() {
+
+				@Override
+				public void propertyChange(PropertyChangeEvent e) {
+					String prop = e.getPropertyName();
+					
+					if(dialog.isVisible() && e.getSource() == msg && prop.equals(JOptionPane.VALUE_PROPERTY)) {
+						wAi = false;
+						bAi = false;
+						dialog.setVisible(false);
+					} 
+					
+				}
+			});
+			
+			dialog.pack();
+			dialog.setVisible(true);
+			
+			int value = ((Integer)msg.getValue()).intValue();
+			if(value == JOptionPane.YES_OPTION) {
+				resetGameState();
+
+			}else if(value == JOptionPane.NO_OPTION) {
+			}
+	}
+	
+	private void DrawDialogMsg() {
+		final JOptionPane msg = new JOptionPane(
+				"Game is a Draw\n" + 
+		        "Reset Game?",
+		        JOptionPane.QUESTION_MESSAGE,
+		        JOptionPane.YES_NO_OPTION);
+		
+		final JDialog dialog = new JDialog(gameFrame, "Game Over: Draw",true);
+		dialog.setContentPane(msg);
+		msg.addPropertyChangeListener(new PropertyChangeListener() {
+
+			@Override
+			public void propertyChange(PropertyChangeEvent e) {
+				String prop = e.getPropertyName();
+				
+				if(dialog.isVisible() && e.getSource() == msg && prop.equals(JOptionPane.VALUE_PROPERTY)) {
+					wAi = false;
+					bAi = false;
+					dialog.setVisible(false);
+				} 
+				
+			}
+		});
+		
+		dialog.pack();
+		dialog.setVisible(true);
+		
+		int value = ((Integer)msg.getValue()).intValue();
+		if(value == JOptionPane.YES_OPTION) {
+			resetGameState();
+
+		}else if(value == JOptionPane.NO_OPTION) {
+		}
+	}
+	
+	private void resetGameState() {
+		chessBoard = Board.createStandardBoard();
+		chessBoard.resetLastCaptureCount();
+		chessBoard.resetLastPawnMoveCount();
+		chessBoard.resetTurnCount();
+		log = new MoveLog();
+		capturesPanel.clear();
+		logPanel.clear();
+		boardPanel.drawBoard(chessBoard);
+	}
+
+	
 	private void addBoardListener(BoardListener listener) {
 	  this.listeners.add(listener);
 		
@@ -150,9 +241,15 @@ public class Table{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				bAi = blackAi.isSelected();
+				if(bAi) {
+					for(final BoardListener listener: listeners) {
+						listener.aiSet();
+					}
+				}
 			}
 		});
 		
+
 		return blackAi;
 	}
 	
@@ -164,7 +261,13 @@ public class Table{
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				System.out.println("call to set white ai");
 				wAi = whiteAi.isSelected();
+				if(wAi) {
+					for(final BoardListener listener: listeners) {
+						listener.aiSet();
+					}
+				}
 			}
 		});
 		
@@ -212,13 +315,52 @@ public class Table{
 			log.addMove(move);
 			soundEffects.processInput("place");
 			moveMade = true;
+			
 			boardPanel.drawBoard(chessBoard);
+			
+			checkTurnCounters(move);
+			
+			if(chessBoard.curPlayer().isInCheckMate()) {
+				CheckMateDialogMsg(chessBoard.curPlayer().getAlliance());
+			}
+			System.out.println(BoardUtils.BoardToFEN(chessBoard));
 			notifyAllBoardListeners();
 			return;
 		}
+		
 		moveMade = false;
 	}
 	
+	private void checkTurnCounters(final Move move) {
+		
+		if(chessBoard.curPlayer().getAlliance().isWhite()) {
+			chessBoard.incrementTurnCount();
+			if(move.isAttack()) {
+				chessBoard.resetLastCaptureCount();
+			}else {
+				chessBoard.incrementLastCaptureCount();
+			}
+			if(move instanceof PawnMove) {
+				chessBoard.resetLastPawnMoveCount();
+			}else {
+				chessBoard.incrementLastPawnMove();
+			}
+			
+
+		}
+		
+		if(chessBoard.isFiftyMoveRule()) {
+			 DrawDialogMsg();
+		}
+	}
+
+	private void notifyAllDraw() {
+			for(final BoardListener listener: listeners) {
+				listener.Draw();
+			}
+		
+	}
+
 	private JMenu createFileMenu() {
 		final JMenu fileMenu = new JMenu("File");
 		final JMenuItem openPGN = new JMenuItem("Load PGN File");
@@ -671,7 +813,6 @@ public class Table{
 
 					@Override
 					public void mouseClicked(final MouseEvent e) {
-						// if it is a humans turn allow events
 						if(SwingUtilities.isRightMouseButton(e)) {
 							mouse.reset();
 							srcTile = null;
@@ -861,6 +1002,28 @@ public class Table{
 				
 			}
 		}
+
+		@Override
+		public void aiSet() {
+			if(wAi && chessBoard.curPlayer().getAlliance().isWhite()) {
+				moveMade();
+			}else if(bAi && chessBoard.curPlayer().getAlliance().isBlack()) {
+				moveMade();
+			}
+			
+		}
+
+		@Override
+		public void srcSet() {return;}
+
+		@Override
+		public void destSet() {return;}
+
+		@Override
+		public void Draw() {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 	
 	public class Brain extends SwingWorker<Move,String> {
@@ -868,7 +1031,7 @@ public class Table{
 		@Override
 		protected Move doInBackground() throws Exception {
 			System.out.println("Thinking...");
-			final MiniMax strategy = new MiniMax(4,chessBoard,0,0);
+			final MiniMax strategy = new MiniMax(2,chessBoard,0,0);
 			
 			return strategy.excecute(chessBoard);
 		}

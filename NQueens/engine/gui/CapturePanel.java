@@ -47,6 +47,11 @@ public class CapturePanel extends JPanel{
 		setPreferredSize(DIMS);
 	}
 	
+	public void clear() {
+		southPanel.removeAll();
+		northPanel.removeAll();
+	}
+	
 	public void redo(final MoveLog log) {
 		southPanel.removeAll();
 		northPanel.removeAll();
