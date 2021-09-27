@@ -3,6 +3,7 @@ package com.chess.engine.board;
 import com.chess.engine.board.Board.Builder;
 import com.chess.engine.peices.Pawn;
 import com.chess.engine.peices.Piece;
+import com.chess.engine.peices.Piece.PieceType;
 import com.chess.engine.peices.Rook;
 
 
@@ -89,6 +90,9 @@ public abstract class Move {
 	  return null;
   }
 
+  public boolean isCheckMove() {
+	 return false;  
+  }
   
   public Board execute() {
 	  
@@ -138,9 +142,9 @@ public abstract class Move {
 public static class AttackMove extends Move{
 		final Piece attackPiece;
 
-	public	AttackMove(final Board board,final  Piece to_move, final int destination, final Piece attack) {
+	public	AttackMove(final Board board,final  Piece to_move, final int destination, final Piece to_attack) {
 			super(board, to_move, destination);
-			this.attackPiece = attack;
+			this.attackPiece = to_attack;
 	}
 	
 	 @Override
@@ -176,6 +180,11 @@ public static class AttackMove extends Move{
 		return true;
 	}
 
+	@Override
+	public boolean isCheckMove() {
+		return this.attackPiece.getType() == PieceType.KING;
+	}
+	
 	@Override
 	public Piece getAttackPiece() {
 		return this.attackPiece;
@@ -214,6 +223,8 @@ public static class AttackMove extends Move{
  public static final class PawnEnPassantAttackMove extends AttackMove{
 	 public PawnEnPassantAttackMove(final Board board, final Piece to_move, final int destination, final Piece attack ) {
 		 super(board,to_move,destination,attack);
+		 System.out.println("created enpassant AttackMove");
+	
 	 }
 	 
 	 @Override
@@ -234,8 +245,10 @@ public static class AttackMove extends Move{
 	 
      @Override
      public Board execute() {
+    	 System.out.println("PawnEnPassantAttack execute");
          final Board.Builder builder = new Builder();
          this.board.curPlayer().getActivePieces().stream().filter(piece -> !this.piece.equals(piece)).forEach(builder::setPiece);
+         
          this.board.curPlayer().opponent().getActivePieces().stream().filter(piece -> !piece.equals(this.getAttackPiece())).forEach(builder::setPiece);
          
          builder.setPiece(this.piece.movePiece(this));
@@ -439,6 +452,7 @@ public static final class QueenSideCastleMove extends CastleMove{
 	}
 
 }
+
 
 public static final class NullMove extends Move{
 

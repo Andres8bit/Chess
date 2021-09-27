@@ -30,6 +30,9 @@ public final class Board {
 	private final Player curPlayer;
 	private final Move transitionMove;
 	private final Pawn enPassantPawn;
+	private static int turnCount = 1;
+	private static int lastCapture = 0;
+	private static int lastPawnMove = 0;
 	
 	private Board(Builder builder) {
 		this.board = createBoard(builder);
@@ -44,6 +47,7 @@ public final class Board {
 		this.bPlayer = new BPlayer(this, wLegalMoves,bLegalMoves);
 		this.curPlayer = builder.nextMove.choosePlayer(this.wPlayer,this.bPlayer);
 		this.transitionMove = builder.transitionMove != null ? builder.transitionMove : MoveFactory.getNullMove();
+
 	}
 	
 	@Override
@@ -58,6 +62,25 @@ public final class Board {
 		}
 		return builder.toString();	
 	}
+	
+	public void resetLastPawnMoveCount() {
+		lastPawnMove = 0;
+		
+	}
+	
+	public void resetLastCaptureCount() {
+		lastCapture = 0;
+	}
+	
+	public void resetTurnCount() {
+		turnCount = 0;
+		
+	}
+
+	public int getTurnCount() {
+		return turnCount;
+	}
+	
 	public Move getTransitionMove() {
 	 return this.transitionMove;	
 	}
@@ -82,7 +105,37 @@ public final class Board {
 		return this.wPlayer;
 	}
 	
+	public void incrementTurnCount() {
+		turnCount++;
+	}
 
+	public void incrementLastCaptureCount() {
+		lastCapture++;
+	}
+	
+	public void incrementLastPawnMove() {
+		lastPawnMove++;
+	}
+	
+	public Iterable<Move> getAllLegalMoves() {
+		return  Iterables.unmodifiableIterable(Iterables.concat(this.wPlayer.getLegalMoves(),this.bPlayer.getLegalMoves()));
+	}
+
+	public Piece getPiece(int coord) {
+		return this.getTile(coord).getPiece();
+	}
+
+	public Iterable<Piece> getAllPieces() {
+		return Iterables.unmodifiableIterable(Iterables.concat(this.wPlayer.getActivePieces(),this.bPlayer.getActivePieces()));
+	}
+
+	public Pawn getEnPassant() {
+		return this.enPassantPawn;
+	}
+
+	public boolean isFiftyMoveRule() {
+		return lastCapture >= 50 && lastPawnMove >= 50;
+	}
 
 	private Collection<Move> legalMoves(Collection<Piece> pieces) {
 		final List<Move> legalMoves = new ArrayList<>();
@@ -110,6 +163,9 @@ public final class Board {
 		return board.get(coord);
 	}
 
+	public Iterable<Tile> getAllTiles(){
+		return Iterables.unmodifiableIterable(board);
+	}
 	
 	private static List<Tile>createBoard(final Builder builder){
 		final Tile[] tiles = new Tile[BoardUtils.NUM_TILES];
@@ -202,6 +258,7 @@ public final class Board {
 			return this;
 		}
 		
+		
 		public Board createCustomBoard(final Collection<Piece> wActivePieces, final Collection<Piece> bActivePieces, final Alliance turnMaker ) {
 			
 			if(this.boardConfig != null) {
@@ -227,7 +284,6 @@ public final class Board {
 		}
 
 		public void setEnPassantPawn(final Pawn pawn) {
-			//System.out.println("setting enPassant Pawn");
 			this.enPassantPawn = pawn;
 			
 		}
@@ -238,24 +294,4 @@ public final class Board {
         }
 		
 	}
-
-	public Iterable<Move> getAllLegalMoves() {
-		return  Iterables.unmodifiableIterable(Iterables.concat(this.wPlayer.getLegalMoves(),this.bPlayer.getLegalMoves()));
-	}
-
-	public Piece getPiece(int coord) {
-		return this.getTile(coord).getPiece();
-	}
-
-	public Iterable<Piece> getAllPieces() {
-		return Iterables.unmodifiableIterable(Iterables.concat(this.wPlayer.getActivePieces(),this.bPlayer.getActivePieces()));
-	}
-
-	public Pawn getEnPassant() {
-		return this.enPassantPawn;
-	}
-
-
-
-
 }

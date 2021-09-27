@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.chess.engine.peices.Piece;
+
 public class BoardUtils {
 
 
@@ -89,5 +91,70 @@ public class BoardUtils {
 	            rowNumber++;
 	        } while(rowNumber % TILES_PER_ROW != 0);
 	        return Collections.unmodifiableList(Arrays.asList(row));
+	    }
+	    
+	   public static String BoardToFEN(final Board board) {
+	    	StringBuilder fen = new StringBuilder();
+	    	int emptyTileCounter = 0;
+	
+	    	
+	    	// for loop handles chess layout:
+	    	for(int i = 0; i < NUM_TILES; i++) {
+	    		final Tile cur = board.getTile(i);
+	    		
+	    		if((i%8 == 0) && i !=0) {
+	    			if(emptyTileCounter !=0) {
+	    				fen.append(emptyTileCounter);
+	    				emptyTileCounter = 0;
+	    			}
+	    			fen.append("/");
+	    		}
+	    		if(cur.isOccupied()) {
+	    			if(emptyTileCounter != 0) {
+	    				fen.append(emptyTileCounter);
+	    				fen.append(cur.getPiece().toString());
+	    				emptyTileCounter = 0;
+	    			}else {
+	    				fen.append(cur.getPiece().toString());
+	    			}
+	    		}else {
+	    			emptyTileCounter++;
+	    		}
+
+	    	}
+	    	
+	    	// add the current player turn
+	    	fen.append(" " + board.curPlayer().getAlliance().toString() + " ");
+	    	
+	    	//add castle options
+	    	if(!board.wPlayer().isCastled()) {
+	    		fen.append("KQ");
+	    	}else {
+	    		fen.append("-");
+	    	}
+	    	
+	    	if(!board.bPlayer().isCastled()) {
+	    		fen.append("kq");
+	    	}else {
+	    		fen.append("-");
+	    	}
+	    	
+	    	//handle enPassant:
+	    	final Piece pawn = board.getEnPassant();
+	    	if(pawn != null) {
+	    		fen.append(" " + BoardUtils.getPos(pawn.pos()) + " ");
+	    	}else {
+	    		fen.append(" - ");
+	    	}
+	    	
+	    	// checks for draw state
+            if(!board.isFiftyMoveRule()) {
+            	fen.append(" 0 ");
+            }else {
+            	fen.append(" 1 ");
+            }
+            
+	    	fen.append(board.getTurnCount());
+	    	return fen.toString();
 	    }
 }
