@@ -6,7 +6,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.chess.engine.board.Board.Builder;
+import com.chess.engine.peices.Alliance;
+import com.chess.engine.peices.Bishop;
+import com.chess.engine.peices.King;
+import com.chess.engine.peices.Knight;
+import com.chess.engine.peices.Pawn;
 import com.chess.engine.peices.Piece;
+import com.chess.engine.peices.Queen;
+import com.chess.engine.peices.Rook;
 
 public class BoardUtils {
 
@@ -93,7 +101,83 @@ public class BoardUtils {
 	        return Collections.unmodifiableList(Arrays.asList(row));
 	    }
 	    
-	   public static String BoardToFEN(final Board board) {
+	    
+	   public static Board FENtoBoard(final String fen) {
+		   String[][] rows = new String[8][1];
+		   Builder builder = new Builder();
+		   int start_index = 0;
+		   int end_index = fen.indexOf('/');
+		   int boardPos = 0;
+		   Alliance turnMaker = null;
+		   
+		   for(int i = 0; i < TILES_PER_ROW-1; i++) {
+			   rows[i][0] = fen.substring(start_index,end_index);
+			  start_index = end_index+1;
+			  end_index = fen.indexOf('/', start_index+1);
+		   }
+		   
+		   
+		   end_index = fen.indexOf(' ',start_index);
+		   rows[7][0] = fen.substring(start_index,end_index);
+		   
+		   turnMaker = fen.charAt(end_index+1) == 'b' ? Alliance.BLACK : Alliance.WHITE;
+		   builder.setMoveMaker(turnMaker);
+		   
+		   for(int i = 0; i < 8; i++) {
+			for(int j = 0; j < rows[i][0].length();j++) {		
+				if(Character.isDigit(rows[i][0].charAt(j))) {
+					boardPos += Character.getNumericValue(rows[i][0].charAt(j));
+				}else {
+					
+					final Piece piece = BoardUtils.buildPiece(rows[i][0].charAt(j),boardPos);	
+					if(piece != null) 
+						{ builder.setPiece(piece); }
+					
+					boardPos++;
+				}
+			}   
+		   }
+	
+		   return builder.build();
+		   
+		   
+	   }
+	   
+	   
+	private static Piece buildPiece(char type, int boardPos) {
+		Alliance owner = Character.isUpperCase(type) ? Alliance.WHITE : Alliance.BLACK;
+		boolean isFirstMove = true;
+		char piece_type = Character.toUpperCase(type);
+		
+		switch(piece_type) {
+		 	case 'B':
+		 		return new Bishop(boardPos,owner);
+		 	case 'K':
+		 		return new King(boardPos,owner);
+		 	case 'N':
+		 		return new Knight(boardPos,owner);
+
+		 	case 'P':
+		 		if(owner.isBlack()) {
+		 			if(!( boardPos >= 8 && boardPos <= 15)) {
+		 				isFirstMove = false;
+		 			}
+		 		}else if(!( boardPos >= 48 && boardPos <= 63)){
+	 				isFirstMove = false;
+	 			}
+		 		
+		 		return new Pawn(boardPos,owner,isFirstMove);
+
+		 	case 'Q':
+		 		return new Queen(boardPos,owner);
+
+		 	case 'R':
+		 		return new Rook(boardPos,owner);
+		}
+		return null;
+	}
+
+	public static String BoardToFEN(final Board board) {
 	    	StringBuilder fen = new StringBuilder();
 	    	int emptyTileCounter = 0;
 	
